@@ -234,6 +234,48 @@ document.addEventListener("change",function(e){if(e.target.id==="importLab")read
 document.addEventListener("keydown",function(e){if(page()!=="/lab/2d"||/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();document.getElementById("undo")?.click()}if(e.key==="Delete"||e.key==="Backspace"){e.preventDefault();document.getElementById("removeShape")?.click()}});
 
 document.addEventListener("submit",async function(e){
+ if(e.target?.id!=="certificateRequestForm")return;
+ e.preventDefault();
+ const form=e.target,button=form.querySelector("button[type=submit]"),out=document.getElementById("certificateRequestResult");
+ button.disabled=true;
+ try{
+  const name=String(new FormData(form).get("publicName")||"").trim();
+  const result=await CAD_CLOUD.issueCertificate(name);
+  if(result.certificate){await refreshOfficialStatus();notify("Free credential issued and recorded in the verification registry.");}
+  else throw Error("The certificate could not be issued.");
+ }catch(error){if(out)out.innerHTML='<div class="notice warning">'+escapeHtml(error.message||"Requirements are not complete")+'</div>'}
+ finally{button.disabled=false}
+});
+document.addEventListener("submit",async function(e){
+ if(!e.target?.classList?.contains("reviewForm"))return;
+ e.preventDefault();
+ const form=e.target,button=form.querySelector('button[type="submit"]'),out=form.querySelector(".reviewResult"),fd=new FormData(form);
+ button.disabled=true;
+ try{
+  const result=await CAD_CLOUD.reviewProject(form.getAttribute("data-id"),String(fd.get("verdict")),Number(fd.get("score")),String(fd.get("feedback")||""));
+  if(out)out.innerHTML='<div class="notice">Decision recorded: '+escapeHtml(result.verdict)+' · '+Number(result.score)+'/100</div>';
+  await loadReviewerQueue();
+ }catch(error){if(out)out.innerHTML='<div class="notice warning">'+escapeHtml(error.message||"Review failed")+'</div>'}
+ finally{button.disabled=false}
+});
+document.addEventListener("click",async function(e){
+ const button=e.target.closest("button");if(!button)return;
+ if(button.id==="refreshVerified"){button.disabled=true;await refreshOfficialStatus();button.disabled=false}
+ if(button.id==="refreshReviews"){await loadReviewerQueue()}
+ if(button.id==="printCertificate"){window.print()}
+ if(button.hasAttribute("data-review-file")){
+   const popup=window.open("about:blank","_blank");
+   try{
+    const result=await CAD_CLOUD.signedEvidence(button.getAttribute("data-submission-id"),button.getAttribute("data-review-file"));
+    const checked=new URL(result.url);
+    if(checked.protocol!=="https:"||checked.hostname!=="kcerxxauczxydmexcdly.supabase.co")throw Error("Untrusted evidence URL");
+    if(popup)popup.location.href=result.url;
+    else window.location.href=result.url;
+   }catch(error){if(popup)popup.close();notify("Cannot open evidence: "+error.message)}
+ }
+});
+
+document.addEventListener("submit",async function(e){
  if(e.target?.id!=="submissionForm")return;
  e.preventDefault();
  const form=e.target,projectId=Number(form.getAttribute("data-id"));
