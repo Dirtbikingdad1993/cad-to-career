@@ -24,15 +24,15 @@ async function request(path,method,body,authed,options){
   try{
     const res=await fetch(url+path,{method:method||"GET",headers:headers,body:body===undefined?undefined:body instanceof Blob||body instanceof File?body:JSON.stringify(body),signal:controller.signal});
     const str=await res.text(),parsed=str?(str.startsWith("{")||str.startsWith("[")?JSON.parse(str):str):null;
-    if(!res.ok)throw Error(errMessage(parsed,res.status));
+    if(!res.ok){const error=new Error(errMessage(parsed,res.status));error.status=res.status;throw error}
     return parsed;
   }finally{clearTimeout(timeout)}
 }
 function acceptToken(data){
   if(!data?.access_token||!data?.refresh_token)throw Error("Session tokens were not returned.");
   const ttl=Math.max(60,Number(data.expires_in)||3600);
-  storeSession({access_token:data.access_token,refresh_token:data.refresh_token,expires_at:Date.now()+ttl*1000});
   user=data.user||user;
+  storeSession({access_token:data.access_token,refresh_token:data.refresh_token,expires_at:Date.now()+ttl*1000,user:user});
 }
 async function refresh(){
   if(refreshPromise)return refreshPromise;
@@ -61,15 +61,18 @@ async function init(){
       }
       history.replaceState(null,"",location.pathname+location.search+(recovery?"#/reset-password":"#/dashboard"));
     }else{
-      try{session=JSON.parse(localStorage.getItem(AUTH_KEY)||"null")}catch(_){session=null}
+      try{session=JSON.parse(localStorage.getItem(AUTH_KEY)||"null");user=session?.user||null}catch(_){session=null}
     }
     if(!session){emit();return null}
     const profile=await request("/auth/v1/user","GET",undefined,true);
     user=profile;
+    storeSession({...session,user:user});
     emit();
     return user;
   }catch(e){
     console.warn("Cloud authentication could not be restored.",e.message);
+    const transient=(typeof navigator!=="undefined"&&!navigator.onLine)||e.name==="AbortError"||e.message==="Failed to fetch";
+    if(transient&&session?.user){user=session.user;emit();return user}
     user=null;storeSession(null);emit();return null;
   }
 }
@@ -123,10 +126,10 @@ async function uploadEvidence(submissionId,file){
   await request("/storage/v1/object/cad-submissions/"+path.split("/").map(encodeURIComponent).join("/"),"POST",file,true,{headers:{"Content-Type":file.type||"application/octet-stream","x-upsert":"false"}});
   return path;
 }
-async function createSubmission(projectId,notes,evidence){
+async function createSubmission(projectId,notes,evidence,submissionId){
   if(!user)throw Error("Sign in to submit.");
   const rows=await request("/rest/v1/project_submissions","POST",{
-    user_id:user.id,project_id:projectId,status:"needs_review",
+    id:submissionId,user_id:user.id,project_id:projectId,status:"needs_review",
     submitted_notes:String(notes||"").slice(0,12000),evidence_paths:Array.isArray(evidence)?evidence:[]
   },true,{headers:{"Prefer":"return=representation"}});
   if(!rows?.[0]?.id)throw Error("Submission was not saved.");
@@ -140,7 +143,22 @@ async function getReviewInfo(){
   if(!user)return [];
   return request("/rest/v1/project_reviews?select=submission_id,score,verdict,feedback,reviewed_at","GET",undefined,true);
 }
+async function assess(action,payload){
+ if(!user)throw Error("Sign in to submit assessed work.");
+ const data=await request("/functions/v1/cad-assess","POST",Object.assign({action},payload||{}),true);
+ return data;
+}
+async function officialStatus(){return assess("status")}
+async function gradeOfficialQuiz(lessonId,answers){return assess("quiz",{lessonId,answers})}
+async function confirmOfficialExercise(lessonId){return assess("exercise",{lessonId})}
+async function gradeOfficialGeometry(shapes){return assess("project1",{shapes})}
+async function loadReviewQueue(){return assess("review_queue")}
+async function reviewProject(submissionId,verdict,score,feedback){return assess("review",{submissionId,verdict,score,feedback})}
+async function issueCertificate(publicName){return assess("issue_certificate",{publicName})}
+async function signedEvidence(submissionId,path){return assess("review_file",{submissionId,path})}
+async function verifyCertificate(id){return request("/functions/v1/cad-verify?id="+encodeURIComponent(id),"GET",undefined,false)}
+
 window.CAD_CLOUD={init,signIn,signUp,signOut,acceptOAuthSession,sendRecovery,changePassword,loadWorkspace,saveWorkspace,
-  uploadEvidence,createSubmission,listSubmissions,getReviewInfo,
+  uploadEvidence,createSubmission,listSubmissions,getReviewInfo,assess,officialStatus,gradeOfficialQuiz,confirmOfficialExercise,gradeOfficialGeometry,loadReviewQueue,reviewProject,issueCertificate,verifyCertificate,signedEvidence,
   currentUser:()=>user,isRecovering:()=>recovery,configured:()=>Boolean(url&&publishable)};
 })();
