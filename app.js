@@ -137,6 +137,63 @@ document.addEventListener("click",function(e){var el=e.target.closest("button");
 function readFile(input,cb){var f=input.files&&input.files[0];if(!f)return;if(f.size>2e6){notify("JSON file must be smaller than 2 MB.");return}var reader=new FileReader();reader.onload=function(){try{cb(JSON.parse(reader.result))}catch(e){notify("Invalid or incompatible JSON.")}};reader.readAsText(f)}
 document.addEventListener("change",function(e){if(e.target.id==="importLab")readFile(e.target,function(obj){if(obj.format!=="cad-to-career-v1"||!Array.isArray(obj.shapes)||obj.shapes.length>1000)throw Error("Invalid CAD schema");var shapes=obj.shapes.map(function(s,i){var keys=s.type==="rect"?["x","y","w","h"]:s.type==="circle"?["x","y","d"]:null;if(!keys)throw Error("Unknown type");var r={id:"import-"+i+"-"+Date.now(),type:s.type};keys.forEach(function(k){if(typeof s[k]!=="number"||!Number.isFinite(s[k])||Math.abs(s[k])>10000)throw Error("Invalid number");r[k]=s[k]});if((r.w!==undefined&&r.w<=0)||(r.h!==undefined&&r.h<=0)||(r.d!==undefined&&r.d<=0))throw Error("Invalid size");return r});record();state.lab=shapes;selected=null;state.project1=null;save();lab();notify("CAD geometry imported.")});if(e.target.id==="restore")readFile(e.target,function(obj){if(obj.format!=="cad-progress-v1"||!obj.data||!Array.isArray(obj.data.completed)||!Array.isArray(obj.data.lab))throw Error("Invalid backup");if(!confirm("Replace all current local progress with this backup?"))return;var d=obj.data;state={completed:d.completed.filter(function(x){return Number.isInteger(x)&&x>=1&&x<=20}).slice(0,20),quizzes:d.quizzes&&typeof d.quizzes==="object"?d.quizzes:{},project1:null,drafts:d.drafts&&typeof d.drafts==="object"?d.drafts:{},notes:{},portfolio:[],displayName:String(d.displayName||"").slice(0,80),lab:d.lab.slice(0,1000)};state.project1=null;save();render();notify("Backup restored. Project validation needs to be rerun.")})});
 document.addEventListener("keydown",function(e){if(page()!=="/lab/2d"||/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();document.getElementById("undo")?.click()}if(e.key==="Delete"||e.key==="Backspace"){e.preventDefault();document.getElementById("removeShape")?.click()}});
+
+document.addEventListener("submit",async function(e){
+ const id=e.target?.id;
+ if(!["loginForm","registerForm","forgotForm","passwordForm"].includes(id))return;
+ e.preventDefault();
+ const form=e.target,button=form.querySelector("button[type=submit]"),out=document.getElementById("authResult"),fd=new FormData(form);
+ const email=String(fd.get("email")||"").trim().toLowerCase(),password=String(fd.get("password")||"");
+ if(button)button.disabled=true;
+ if(out)out.textContent="Connecting securely…";
+ try{
+   if(!window.CAD_CLOUD?.configured())throw Error("Cloud authentication is not configured.");
+   if(id==="registerForm"){
+     if(password!==String(fd.get("confirm")||""))throw Error("Passwords do not match.");
+     if(password.length<10)throw Error("Use at least 10 characters for your password.");
+     const result=await CAD_CLOUD.signUp(email,password);
+     if(result.needsVerification){
+       if(out)out.innerHTML='<div class="notice">Registration requested. Check your email for the verification link, then return here and sign in. Check spam if you do not see the message.</div>';
+     }else{location.hash="#/dashboard";notify("Account created. Loading your cloud workspace.")}
+   }else if(id==="loginForm"){
+     await CAD_CLOUD.signIn(email,password);
+     location.hash="#/dashboard";
+     notify("Signed in. Restoring your private learning workspace.");
+   }else if(id==="forgotForm"){
+     await CAD_CLOUD.sendRecovery(email);
+     if(out)out.innerHTML='<div class="notice">If an account exists for that email, a password reset link has been sent. Follow the link to continue.</div>';
+   }else{
+     await CAD_CLOUD.changePassword(password);
+     if(out)out.innerHTML='<div class="notice">Password updated. Sign in again with the new password.</div>';
+     await CAD_CLOUD.signOut();
+     location.hash="#/login";
+   }
+ }catch(error){
+   if(out)out.innerHTML='<div class="notice warning">'+escapeHtml(error.message||"Authentication failed. Please try again.")+'</div>';
+ }finally{if(button)button.disabled=false}
+});
+document.addEventListener("click",async function(e){
+ const b=e.target.closest("button");if(!b)return;
+ if(b.id==="importGuest"){if(cloudUser())mergeGuestPractice();return}
+ if(b.id==="syncNow"){
+   if(!cloudUser()){notify("Sign in to sync.");return}
+   b.disabled=true;
+   try{cloudDirty=true;await flushCloudSync();notify("Your progress and CAD drawing are saved online.")}
+   catch(err){notify("Cloud sync failed; changes remain on this device. "+err.message)}
+   finally{b.disabled=false}
+ }
+ if(b.id==="signOut"){
+   b.disabled=true;
+   try{await flushCloudSync()}
+   catch(err){if(!confirm("Your most recent changes could not reach the cloud. They remain stored on this device. Sign out anyway?")){b.disabled=false;return}}
+   try{await CAD_CLOUD.signOut();location.hash="#/login";notify("Signed out. Your cloud data remains private and can be restored when you sign in.")}
+   catch(err){notify("Sign out failed: "+err.message);b.disabled=false}
+ }
+});
+window.addEventListener("cad-auth-change",function(e){enterCloudAccount(e.detail.user).catch(function(err){console.error("Unable to load account:",err)})});
+window.addEventListener("online",function(){if(cloudDirty&&cloudUser())flushCloudSync().catch(function(){})});
+if(window.CAD_CLOUD){CAD_CLOUD.init().catch(function(e){console.warn("Cloud initialization failed",e.message)})}
+
 window.addEventListener("hashchange",function(){render();window.scrollTo(0,0)});
 render();
 if(typeof navigator!=="undefined" && "serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){/* offline is optional */})})}
