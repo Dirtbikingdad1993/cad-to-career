@@ -43,6 +43,93 @@ function portfolio(){var drafts=content.projects.filter(function(p){return !!sta
 function certificate(){var done=state.completed.length===20, passed=state.project1&&state.project1.pass;layout('<div class="eyebrow">EARNED, NEVER ASSUMED</div><h1>CAD Foundations certificate</h1><p class="muted">This platform plans to issue a free, verifiable completion certificate based on demonstrated competency. Local study progress alone does not grant a certificate.</p><div class="certificate locked"><div class="eyebrow">CAD TO CAREER · CERTIFICATE PATH</div><h2>Credential not yet earned</h2><p class="muted">An authenticated reviewer must approve advanced project evidence and the independent capstone before any verified certificate is issued.</p><span class="badge pending">Not issued</span></div>'+titleBlock("REQUIREMENTS","Certificate eligibility checks","No credential IDs or PDF certificates are generated from unverified browser state")+'<div class="list">'+[['Complete and confirm all 20 lessons',done],['Pass every lesson quiz at ≥80%',Object.values(state.quizzes||{}).filter(function(q){return q.passed}).length===20],['Pass Project 1 automatic geometry verification',false],['Have Projects 2–4 approved by a human reviewer',false],['Capstone human-reviewed at ≥85/100',false],['Verified email and server-issued credential',false]].map(function(a,i){return '<div class="listitem"><div class="step">'+(a[1]?"✓":i+1)+'</div><div class="listcontent"><strong>'+a[0]+'</strong><p>'+(i===2&&passed?"Local geometry passed; server verification still required.":a[1]?"Locally recorded.":"Not verified")+'</p></div><span class="badge '+(a[1]?"done":"pending")+'">'+(a[1]?"Local check met":"Pending")+'</span></div>'}).join("")+'</div>',"Certificate")}
 function settings(){layout('<div class="eyebrow">YOUR WORKSPACE</div><h1>Settings & data</h1>' + accountPanelHtml() + '<div class="notice warning">' + cloudNoticeText() + '</div><div class="grid two" style="margin-top:20px"><div class="panel"><h3>Learning profile</h3><label class="field">Display name (practice profile)<input id="displayName" maxlength="80" value="'+escapeHtml(state.displayName||"")+'" placeholder="Your display name"/></label><div class="actions"><button class="btn primary" id="saveName">Save profile</button></div></div><div class="panel"><h3>Back up your progress</h3><p>Export lessons, quiz results, project notes and CAD geometry to a JSON backup.</p><div class="actions"><button class="btn" id="backup">Download backup</button><label class="btn">Restore backup <input id="restore" type="file" accept=".json,application/json" style="display:none"/></label></div></div><div class="panel"><h3>Privacy by default</h3><p>No public profile, upload or cloud synchronization occurs. You remain responsible for any files you export and share.</p></div><div class="panel"><h3>Delete local data</h3><p>Clear saved progress and drawings on this device. Export a backup first if you want to keep them.</p><button class="btn warning" id="clearProgress">Delete local records</button></div></div>'+titleBlock("LEARNING TOOLS","Choose the right CAD software","All core course projects have a free software path")+'<div class="tablewrap"><table><thead><tr><th>Tool</th><th>Best use</th><th>Cost</th><th>Device</th></tr></thead><tbody>'+content.software.map(function(s){return '<tr><td><a href="'+s.url+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(s.name)+'</a></td><td>'+escapeHtml(s.role)+'</td><td>'+escapeHtml(s.cost)+'</td><td>'+escapeHtml(s.platform)+'</td></tr>'}).join("")+'</tbody></table></div>',"Settings")}
 function notfound(){layout('<h1>Page not found</h1><p class="muted">That learning page does not exist.</p><a href="#/" class="btn primary">Return home</a>',"Not found")}
+
+function cloudUser(){return window.CAD_CLOUD&&CAD_CLOUD.currentUser?CAD_CLOUD.currentUser():null}
+function sidebarCloudHtml(){return cloudUser()?'<span class="badge done">Cloud account</span><p>Learning progress and drawings can follow you between devices. Practice scores are not official certifications.</p>':'<span class="badge pending">Guest practice</span><p>This device saves your work locally. Create a free account for private online backup and cross-device progress.</p>'}
+function topCloudHtml(){return '<span class="pill" id="cloudBadge">'+escapeHtml(cloudStatus)+'</span><a class="btn small ghost" href="'+(cloudUser()?"#/settings":"#/login")+'">'+(cloudUser()?"Account":"Sign in")+'</a>'}
+function cloudNoticeText(){return cloudUser()?"Signed in as "+escapeHtml(cloudUser().email||"student")+". Your practice workspace can sync to Supabase when online. Official certification still requires verified reviewer assessment.":"Guest mode saves progress on this device only. Sign in or create a free account to carry your progress between your phone and computer."}
+function dashboardCloudMessage(){return cloudUser()?"Your practice progress and CAD geometry are stored privately in the cloud after synchronization. Locally recorded quiz results are not verified credential credit.":"This is browser-only practice progress. Create a free account to sync it online. This is not verified credential credit."}
+function accountPanelHtml(){return '<section class="panel" style="margin-top:20px"><h3>Cloud account & sync</h3>'+(cloudUser()?'<p>Signed in as <strong>'+escapeHtml(cloudUser().email||"Student")+'</strong>. <span id="accountCloudStatus">'+escapeHtml(cloudStatus)+'</span>.</p><div class="actions"><button class="btn primary" type="button" id="syncNow">Save online now</button><button class="btn" type="button" id="importGuest">Import guest practice</button><button class="btn warning" type="button" id="signOut">Sign out</button></div><p class="smalltext muted">You can log out and sign in again on another device to retrieve saved work. Keep a backup if you intend to work offline for a long period.</p>':'<p>Your current learning progress has no online backup.</p><div class="actions"><a class="btn primary" href="#/register">Create free account</a><a class="btn" href="#/login">Sign in</a></div>')+'</section>'}
+function accountPage(mode){
+ var user=cloudUser(),register=mode==="/register",forgot=mode==="/forgot-password",reset=mode==="/reset-password";
+ var heading=register?"Create your free account":forgot?"Reset your password":reset?"Choose a new password":"Welcome back";
+ var intro=register?"Create one private account to keep lessons, quizzes, drawings, notes and project history available on your Android phone and computer.":forgot?"Enter your email address and we will send a password reset link.":reset?"Set a new password to secure your account.":"Sign in to restore your saved CAD practice and learning progress from the cloud.";
+ var id=register?"registerForm":forgot?"forgotForm":reset?"passwordForm":"loginForm";
+ var html='<div class="eyebrow">YOUR CAD TO CAREER ACCOUNT</div><h1>'+heading+'</h1><p class="muted">'+intro+'</p><div class="grid two"><section class="panel"><form id="'+id+'"><div class="stack">'+(!reset?'<label class="field">Email address<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" maxlength="200"/></label>':'')+(!forgot?'<label class="field">'+(reset?"New password":"Password")+'<input name="password" type="password" autocomplete="'+(register?"new-password":reset?"new-password":"current-password")+'" required minlength="'+(register||reset?"10":"1")+'" maxlength="200" placeholder="'+(register||reset?"At least 10 characters":"Your password")+'"/></label>':'')+(register?'<label class="field">Confirm password<input type="password" name="confirm" autocomplete="new-password" required minlength="10"/></label>':'')+'<button class="btn primary" type="submit">'+(register?"Create account":forgot?"Send reset link":reset?"Update password":"Sign in")+'</button></div></form><div id="authResult" role="status" style="margin-top:15px"></div><div class="actions">'+(register?'<a href="#/login" class="btn small">Already registered? Sign in</a>':forgot?'<a href="#/login" class="btn small">Return to sign in</a>':reset?'<a href="#/settings" class="btn small">Account settings</a>':'<a href="#/register" class="btn small">New? Create an account</a><a href="#/forgot-password" class="btn small">Forgot password?</a>')+'</div></section><div class="panel"><h3>Private progress across devices</h3><p>Use the same email and password on a phone, laptop or desktop to load your own cloud workspace.</p><div class="notice">Email confirmation may be required before your first sign-in. Existing guest data is not automatically added to somebody else’s account; you can import it from Settings after signing in.</div><p class="smalltext muted">Private workspace access is restricted by database row-level security. Browser-stored practice scores do not grant official certificates.</p>'+(user?'<a href="#/dashboard" class="btn small">Continue as '+escapeHtml(user.email||"student")+'</a>':'')+'</div></div>';
+ layout(html,"Account")
+}
+function cleanWorkspace(raw){
+ var v={completed:[],quizzes:{},project1:null,drafts:{},notes:{},portfolio:[],displayName:"",lab:[]};
+ if(!raw||typeof raw!=="object"||Array.isArray(raw))return v;
+ if(Array.isArray(raw.completed))v.completed=Array.from(new Set(raw.completed.filter(function(n){return Number.isInteger(n)&&n>=1&&n<=20}))).slice(0,20);
+ if(raw.quizzes&&typeof raw.quizzes==="object")Object.keys(raw.quizzes).forEach(function(k){var q=raw.quizzes[k];if(/^(?:[1-9]|1[0-9]|20)$/.test(k)&&q&&Number.isInteger(q.score)&&q.score>=0&&q.score<=100)v.quizzes[k]={score:q.score,passed:Boolean(q.passed&&q.score>=80),date:String(q.date||"").slice(0,60)}});
+ if(raw.drafts&&typeof raw.drafts==="object")Object.keys(raw.drafts).forEach(function(k){if(/^[1-5]$/.test(k)&&typeof raw.drafts[k]==="string")v.drafts[k]=raw.drafts[k].slice(0,12000)});
+ if(Array.isArray(raw.lab))v.lab=raw.lab.slice(0,500).flatMap(function(o,i){if(!o||!["rect","circle"].includes(o.type))return [];var keys=o.type==="rect"?["x","y","w","h"]:["x","y","d"];if(!keys.every(function(k){return typeof o[k]==="number"&&Number.isFinite(o[k])&&Math.abs(o[k])<=10000}))return [];if((o.w!==undefined&&o.w<=0)||(o.h!==undefined&&o.h<=0)||(o.d!==undefined&&o.d<=0))return [];var shape={id:String(o.id||"shape-"+i).replace(/[^a-z0-9_-]/gi,"").slice(0,80)||"shape-"+i,type:o.type};keys.forEach(function(k){shape[k]=o[k]});return [shape]});
+ if(raw.project1&&Number.isInteger(raw.project1.score))v.project1={pass:Boolean(raw.project1.pass),score:Math.max(0,Math.min(100,raw.project1.score)),source:"local-draft-only"};
+ v.displayName=typeof raw.displayName==="string"?raw.displayName.slice(0,80):"";
+ if(typeof raw._updatedAt==="string"&&Number.isFinite(Date.parse(raw._updatedAt)))v._updatedAt=raw._updatedAt;
+ return v;
+}
+function meaningfulWorkspace(value){return Boolean(value.completed.length||Object.keys(value.quizzes).length||Object.keys(value.drafts).length||value.lab.length||value.displayName)}
+function setCloudStatus(value){cloudStatus=value;var badge=document.getElementById("cloudBadge"),el=document.getElementById("accountCloudStatus");if(badge)badge.textContent=value;if(el)el.textContent=value}
+function queueCloudSync(){
+ if(!cloudUser()||!cloudReady)return;
+ cloudDirty=true;setCloudStatus("Changes pending");
+ clearTimeout(cloudSaveTimer);
+ cloudSaveTimer=setTimeout(function(){flushCloudSync().catch(function(e){console.warn("Cloud sync pending:",e.message)})},900);
+}
+async function flushCloudSync(){
+ clearTimeout(cloudSaveTimer);
+ if(!cloudUser()||!cloudReady)return;
+ if(cloudSaveInFlight){await cloudSaveInFlight;if(cloudDirty)return flushCloudSync();return}
+ if(!cloudDirty){setCloudStatus("Cloud saved");return}
+ cloudDirty=false;setCloudStatus("Saving to cloud…");
+ var snapshot=JSON.parse(JSON.stringify(cleanWorkspace(state)));
+ cloudSaveInFlight=CAD_CLOUD.saveWorkspace(snapshot);
+ try{await cloudSaveInFlight;setCloudStatus("Cloud saved")}
+ catch(e){cloudDirty=true;setCloudStatus("Offline • changes pending");throw e}
+ finally{cloudSaveInFlight=null}
+ if(cloudDirty)return flushCloudSync();
+}
+async function enterCloudAccount(user){
+ var sequence=++cloudLoadSequence;
+ clearTimeout(cloudSaveTimer);cloudReady=false;cloudDirty=false;
+ if(!user){activeStorageKey=KEY;try{state=cleanWorkspace(JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(_){state=cleanWorkspace({})}setCloudStatus("Guest • device only");selected=null;render();return}
+ activeStorageKey="cad-to-career-account-"+user.id;
+ var cached;
+ try{cached=cleanWorkspace(JSON.parse(localStorage.getItem(activeStorageKey)||"{}"))}catch(_){cached=cleanWorkspace({})}
+ state=cached;selected=null;setCloudStatus("Loading cloud…");render();
+ try{
+   var cloud=await CAD_CLOUD.loadWorkspace();
+   if(sequence!==cloudLoadSequence||cloudUser()?.id!==user.id)return;
+   if(cloud){
+     var remote=cleanWorkspace(cloud.payload);
+     var localTime=Date.parse(cached._updatedAt||"")||0,remoteTime=Date.parse(cloud.updated_at||"")||0;
+     if(meaningfulWorkspace(cached)&&localTime>remoteTime+1500){
+       if(confirm("This device has unsynced learning changes newer than the cloud. Keep and upload this device’s copy? Choose Cancel to load the cloud copy.")){state=cached;cloudDirty=true}
+       else state=remote;
+     }else state=remote;
+   }else {state=cached;cloudDirty=true}
+   cloudReady=true;saveLocalOnly();setCloudStatus(cloudDirty?"Changes pending":"Cloud saved");render();
+   if(cloudDirty)queueCloudSync();
+ }catch(e){
+   if(sequence!==cloudLoadSequence)return;
+   cloudReady=true;state=cached;setCloudStatus("Offline • changes pending");render();
+   notify("Cloud unavailable. Changes are saved on this device; sign in while online to sync.");
+ }
+}
+function mergeGuestPractice(){
+ var guest;try{guest=cleanWorkspace(JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(_){guest=cleanWorkspace({})}
+ if(!meaningfulWorkspace(guest)){notify("There is no guest practice to import.");return}
+ if(!confirm("Merge guest lessons, quizzes and project notes with this account? If cloud drawing is blank, guest shapes will be included."))return;
+ state.completed=Array.from(new Set(state.completed.concat(guest.completed))).sort(function(a,b){return a-b});
+ Object.keys(guest.quizzes).forEach(function(id){if(!state.quizzes[id]||state.quizzes[id].score<guest.quizzes[id].score)state.quizzes[id]=guest.quizzes[id]});
+ Object.keys(guest.drafts).forEach(function(id){if(!state.drafts[id])state.drafts[id]=guest.drafts[id]});
+ if(!state.lab.length&&guest.lab.length)state.lab=guest.lab;
+ if(!state.displayName&&guest.displayName)state.displayName=guest.displayName;
+ save();render();notify("Guest practice added. Cloud save scheduled.");
+}
+
 function render(){var p=page();if(p==="/login"||p==="/register"||p==="/forgot-password"||p==="/reset-password")accountPage(p);else if(p==="/")overview();else if(p==="/courses")courses();else if(p.indexOf("/learn/")===0)lesson(p.split("/")[2]);else if(p==="/lab/2d")lab();else if(p==="/projects")projects();else if(/^\/projects\/[1-5]$/.test(p))project(Number(p.split("/")[2]));else if(p==="/dashboard")dashboard();else if(p==="/portfolio")portfolio();else if(p==="/certificate")certificate();else if(p==="/settings")settings();else notfound()}
 function notify(msg){var n=document.getElementById("flash");if(!n){n=document.createElement("div");n.id="flash";n.setAttribute("role","status");n.style.cssText="position:fixed;z-index:90;right:16px;bottom:80px;max-width:340px;background:#183e42;border:1px solid #54d5c6;padding:14px 18px;border-radius:10px;color:#e0fff6;font-size:13px;box-shadow:0 15px 40px #0008";document.body.appendChild(n)}n.textContent=msg;setTimeout(function(){if(n.parentNode)n.remove()},3900)}
 document.addEventListener("submit",function(e){if(e.target.id!=="quizForm")return;e.preventDefault();var id=Number(e.target.getAttribute("data-id")),l=content.lessons.find(function(x){return x.id===id}),correct=0;var fd=new FormData(e.target);l.quiz.forEach(function(q,i){if(fd.get("q"+i)===q.answer)correct++});var score=Math.round(correct/l.quiz.length*100),pass=score>=80;state.quizzes[id]={score:score,passed:pass,date:new Date().toISOString()};if(!pass)state.completed=state.completed.filter(function(n){return n!==id});save();var out=document.getElementById("quizResult");if(out)out.innerHTML='<div class="notice '+(pass?"":"warning")+'" style="margin-top:16px"><strong>'+score+'% · '+(pass?"Passed":"Retry required")+'</strong><br>'+l.quiz.map(function(q,i){return 'Question '+(i+1)+': '+(fd.get("q"+i)===q.answer?"Correct":"Incorrect; review lesson content")+'.'}).join("<br>")+'</div>';var button=document.getElementById("completeLesson");if(button)button.disabled=!pass});
