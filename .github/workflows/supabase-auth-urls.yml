@@ -1,0 +1,32 @@
+name: Verify Supabase Auth setup
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Check settings or configure exact CAD to Career redirects
+        type: choice
+        required: true
+        default: check
+        options:
+          - check
+          - configure
+permissions:
+  contents: read
+jobs:
+  auth-urls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - name: Verify or configure Auth URLs
+        env:
+          SUPABASE_MANAGEMENT_PAT: ${{ secrets.SUPABASE_MANAGEMENT_PAT }}
+          AUTH_MODE: ${{ github.event.inputs.mode }}
+        run: node scripts/auth-redirects.mjs "$AUTH_MODE"
