@@ -50,13 +50,32 @@ function topCloudHtml(){return '<span class="pill" id="cloudBadge">'+escapeHtml(
 function cloudNoticeText(){return cloudUser()?"Signed in as "+escapeHtml(cloudUser().email||"student")+". Your practice workspace can sync to Supabase when online. Official certification still requires verified reviewer assessment.":"Guest mode saves progress on this device only. Sign in or create a free account to carry your progress between your phone and computer."}
 function dashboardCloudMessage(){return cloudUser()?"Your practice progress and CAD geometry are stored privately in the cloud after synchronization. Locally recorded quiz results are not verified credential credit.":"This is browser-only practice progress. Create a free account to sync it online. This is not verified credential credit."}
 function accountPanelHtml(){return '<section class="panel" style="margin-top:20px"><h3>Cloud account & sync</h3>'+(cloudUser()?'<p>Signed in as <strong>'+escapeHtml(cloudUser().email||"Student")+'</strong>. <span id="accountCloudStatus">'+escapeHtml(cloudStatus)+'</span>.</p><div class="actions"><button class="btn primary" type="button" id="syncNow">Save online now</button><button class="btn" type="button" id="importGuest">Import guest practice</button><button class="btn warning" type="button" id="signOut">Sign out</button></div><p class="smalltext muted">You can log out and sign in again on another device to retrieve saved work. Keep a backup if you intend to work offline for a long period.</p>':'<p>Your current learning progress has no online backup.</p><div class="actions"><a class="btn primary" href="#/register">Create free account</a><a class="btn" href="#/login">Sign in</a></div>')+'</section>'}
+function showSocialSignIn(){
+ var container=document.getElementById("social-signin");
+ if(!container||!window.CAD_SOCIAL)return;
+ CAD_SOCIAL.enabledProviders().then(function(providers){
+   if(!container.isConnected||!providers.length)return;
+   container.hidden=false;
+   var label=document.createElement("p");label.className="smalltext muted";label.textContent="Or continue with";container.appendChild(label);
+   providers.forEach(function(provider){
+     var button=document.createElement("button");button.className="btn";button.type="button";button.textContent="Continue with "+provider.label;
+     button.addEventListener("click",async function(){
+       var buttons=container.querySelectorAll("button");buttons.forEach(function(item){item.disabled=true});
+       try{await CAD_SOCIAL.begin(provider.id)}
+       catch(error){var out=document.getElementById("authResult");if(out)out.textContent=error.message||"Could not start sign-in.";buttons.forEach(function(item){item.disabled=false})}
+     });
+     container.appendChild(button);
+   });
+ }).catch(function(){/* Email sign-in remains available when provider settings cannot be reached. */});
+}
 function accountPage(mode){
  var user=cloudUser(),register=mode==="/register",forgot=mode==="/forgot-password",reset=mode==="/reset-password";
  var heading=register?"Create your free account":forgot?"Reset your password":reset?"Choose a new password":"Welcome back";
  var intro=register?"Create one private account to keep lessons, quizzes, drawings, notes and project history available on your Android phone and computer.":forgot?"Enter your email address and we will send a password reset link.":reset?"Set a new password to secure your account.":"Sign in to restore your saved CAD practice and learning progress from the cloud.";
  var id=register?"registerForm":forgot?"forgotForm":reset?"passwordForm":"loginForm";
- var html='<div class="eyebrow">YOUR CAD TO CAREER ACCOUNT</div><h1>'+heading+'</h1><p class="muted">'+intro+'</p><div class="grid two"><section class="panel"><form id="'+id+'"><div class="stack">'+(!reset?'<label class="field">Email address<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" maxlength="200"/></label>':'')+(!forgot?'<label class="field">'+(reset?"New password":"Password")+'<input name="password" type="password" autocomplete="'+(register?"new-password":reset?"new-password":"current-password")+'" required minlength="'+(register||reset?"10":"1")+'" maxlength="200" placeholder="'+(register||reset?"At least 10 characters":"Your password")+'"/></label>':'')+(register?'<label class="field">Confirm password<input type="password" name="confirm" autocomplete="new-password" required minlength="10"/></label>':'')+'<button class="btn primary" type="submit">'+(register?"Create account":forgot?"Send reset link":reset?"Update password":"Sign in")+'</button></div></form><div id="authResult" role="status" style="margin-top:15px"></div><div class="actions">'+(register?'<a href="#/login" class="btn small">Already registered? Sign in</a>':forgot?'<a href="#/login" class="btn small">Return to sign in</a>':reset?'<a href="#/settings" class="btn small">Account settings</a>':'<a href="#/register" class="btn small">New? Create an account</a><a href="#/forgot-password" class="btn small">Forgot password?</a>')+'</div></section><div class="panel"><h3>Private progress across devices</h3><p>Use the same email and password on a phone, laptop or desktop to load your own cloud workspace.</p><div class="notice">Email confirmation may be required before your first sign-in. Existing guest data is not automatically added to somebody else’s account; you can import it from Settings after signing in.</div><p class="smalltext muted">Private workspace access is restricted by database row-level security. Browser-stored practice scores do not grant official certificates.</p>'+(user?'<a href="#/dashboard" class="btn small">Continue as '+escapeHtml(user.email||"student")+'</a>':'')+'</div></div>';
- layout(html,"Account")
+ var html='<div class="eyebrow">YOUR CAD TO CAREER ACCOUNT</div><h1>'+heading+'</h1><p class="muted">'+intro+'</p><div class="grid two"><section class="panel"><form id="'+id+'"><div class="stack">'+(!reset?'<label class="field">Email address<input name="email" type="email" autocomplete="email" required placeholder="you@example.com" maxlength="200"/></label>':'')+(!forgot?'<label class="field">'+(reset?"New password":"Password")+'<input name="password" type="password" autocomplete="'+(register?"new-password":reset?"new-password":"current-password")+'" required minlength="'+(register||reset?"10":"1")+'" maxlength="200" placeholder="'+(register||reset?"At least 10 characters":"Your password")+'"/></label>':'')+(register?'<label class="field">Confirm password<input type="password" name="confirm" autocomplete="new-password" required minlength="10"/></label>':'')+'<button class="btn primary" type="submit">'+(register?"Create account":forgot?"Send reset link":reset?"Update password":"Sign in")+'</button></div></form><div id="social-signin" class="stack" style="margin-top:18px" hidden></div><div id="authResult" role="status" style="margin-top:15px"></div><div class="actions">'+(register?'<a href="#/login" class="btn small">Already registered? Sign in</a>':forgot?'<a href="#/login" class="btn small">Return to sign in</a>':reset?'<a href="#/settings" class="btn small">Account settings</a>':'<a href="#/register" class="btn small">New? Create an account</a><a href="#/forgot-password" class="btn small">Forgot password?</a>')+'</div></section><div class="panel"><h3>Private progress across devices</h3><p>Use the same account on a phone, laptop or desktop to load your own cloud workspace.</p><div class="notice">Email confirmation may be required before your first sign-in. Existing guest data is not automatically added to somebody else’s account; you can import it from Settings after signing in.</div><p class="smalltext muted">Private workspace access is restricted by database row-level security. Browser-stored practice scores do not grant official certificates.</p>'+(user?'<a href="#/dashboard" class="btn small">Continue as '+escapeHtml(user.email||"student")+'</a>':'')+'</div></div>';
+ layout(html,"Account");
+ if(!forgot&&!reset&&!user)showSocialSignIn();
 }
 function cleanWorkspace(raw){
  var v={completed:[],quizzes:{},project1:null,drafts:{},notes:{},portfolio:[],displayName:"",lab:[]};
@@ -192,9 +211,24 @@ document.addEventListener("click",async function(e){
 });
 window.addEventListener("cad-auth-change",function(e){enterCloudAccount(e.detail.user).catch(function(err){console.error("Unable to load account:",err)})});
 window.addEventListener("online",function(){if(cloudDirty&&cloudUser())flushCloudSync().catch(function(){})});
-if(window.CAD_CLOUD){CAD_CLOUD.init().catch(function(e){console.warn("Cloud initialization failed",e.message)})}
+if(window.CAD_CLOUD){
+ (async function(){
+   try{
+     if(window.CAD_SOCIAL?.hasCallback()){
+       var socialSession=await CAD_SOCIAL.completeCallback();
+       await CAD_CLOUD.acceptOAuthSession(socialSession);
+       location.hash="#/dashboard";
+       notify("Signed in. Restoring your private learning workspace.");
+     }else await CAD_CLOUD.init();
+   }catch(error){
+     await CAD_CLOUD.init().catch(function(e){console.warn("Cloud initialization failed",e.message)});
+     notify(error.message||"Sign-in could not be completed. Please try again.");
+   }
+ })();
+}
 
 window.addEventListener("hashchange",function(){render();window.scrollTo(0,0)});
 render();
 if(typeof navigator!=="undefined" && "serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){/* offline is optional */})})}
 })();
+

@@ -79,6 +79,12 @@ async function signIn(email,password){
   if(!user)user=await request("/auth/v1/user","GET",undefined,true);
   recovery=false;emit();return user;
 }
+async function acceptOAuthSession(data){
+  if(!data?.access_token||!data?.refresh_token)throw Error("Session tokens were not returned.");
+  // Validate the new identity before replacing any existing signed-in session.
+  const profile=await request("/auth/v1/user","GET",undefined,false,{headers:{"Authorization":"Bearer "+data.access_token}});
+  acceptToken(data);user=profile;recovery=false;emit();return user;
+}
 async function signUp(email,password){
   const redirect=encodeURIComponent(location.origin+"/");
   const result=await request("/auth/v1/signup?redirect_to="+redirect,"POST",{email,password},false);
@@ -134,7 +140,7 @@ async function getReviewInfo(){
   if(!user)return [];
   return request("/rest/v1/project_reviews?select=submission_id,score,verdict,feedback,reviewed_at","GET",undefined,true);
 }
-window.CAD_CLOUD={init,signIn,signUp,signOut,sendRecovery,changePassword,loadWorkspace,saveWorkspace,
+window.CAD_CLOUD={init,signIn,signUp,signOut,acceptOAuthSession,sendRecovery,changePassword,loadWorkspace,saveWorkspace,
   uploadEvidence,createSubmission,listSubmissions,getReviewInfo,
   currentUser:()=>user,isRecovering:()=>recovery,configured:()=>Boolean(url&&publishable)};
 })();

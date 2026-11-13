@@ -1,0 +1,14 @@
+{
+  "name": "cad-to-career-auth-build",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "esbuild social-auth.mjs --bundle --minify --format=iife --target=es2020 --legal-comments=inline --outfile=../social-auth.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.119.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

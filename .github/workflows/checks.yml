@@ -23,7 +23,16 @@ jobs:
         run: |
           node --check app.js
           node --check data.js
+          node --check cloud.js
+          node --check social-auth.js
+      - name: Verify bundled auth client
+        run: |
+          npm ci --prefix auth-build --no-audit --no-fund
+          npm run build --prefix auth-build
+          git diff --exit-code -- social-auth.js
       - name: Validate curriculum and application integrity
         run: |
           node tests/smoke.cjs
           node --test tests/geometry-feedback.cjs
+          node --test tests/social-auth.cjs
+
