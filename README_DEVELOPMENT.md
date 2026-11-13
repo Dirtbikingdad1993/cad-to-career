@@ -1,56 +1,68 @@
-# CAD to Career — Independent Learning Platform
-
-**Status:** Working static alpha, not certified production or a completed full-stack service.
+# CAD to Career — Development and Release Status
 
 ## Current stack
+- Static HTML/CSS/JavaScript learning app (no runtime npm dependencies)
+- Private GitHub repository: Dirtbikingdad1993/cad-to-career
+- Vercel production: https://cad-to-career.vercel.app/
+- Supabase Auth, PostgreSQL, private Storage and JWT-authenticated Edge Functions
+- Responsive Android PWA with offline lesson files and on-device draft cache
 
-- Vanilla HTML, CSS, JavaScript; no build or framework dependency
-- Vercel static deployment from private GitHub `Dirtbikingdad1993/cad-to-career`
-- 20 real lessons with knowledge checks and a practical confirmation control
-- 2D SVG CAD editor (numeric dimensions, select, edit, delete, undo/redo, JSON/SVG export and import)
-- Project 1 geometry validator: 120 x 70 mm plate, 4 holes (Ø8 mm)
-- Five portfolio project briefs and local drafting notes
-- Device-local progress, quiz scores, settings, backup export/restore
-- Certificate intentionally locked until independently verified reviewer assessments
+## Implemented
+- 20 course lessons, 60 practice quiz questions, student dashboard
+- Real 2D SVG CAD editor, numeric dimensions, import/export, undo/redo
+- Five project briefs and five assessment rubrics
+- Email/password account registration, login, logout, recovery and password updates
+- Private cloud workspace per authenticated user; automatic save after edits, restore on login
+- Guest-to-account import and account-to-account isolation
+- Official server-side quiz scoring, exercise confirmations and Project 1 geometry checks
+- Private evidence uploads for Projects 2–5 and Needs Review status
+- Reviewer-only queue, private short-lived evidence links, verdicts, rubric scores and feedback
+- Server-controlled credential eligibility and minimal public credential verification
+- Student account protection via Supabase RLS; Vercel previews protected, production public
+- Unit smoke tests and security-focused checks
 
-## Start
+## Live Supabase project
+- Project: `kcerxxauczxydmexcdly` (us-west-1)
+- Publishable key is in public `cloud-config.js`, as intended. **Never** commit service-role keys.
+- Applied migrations: `0001_initial.sql`, `0002_student_cloud_workspaces.sql`, `0003_reviewer_assessment.sql`
+- Edge Functions: `cad-assess` (JWT required) and `cad-verify` (public read-only)
+- RLS test using two synthetic users was successful; test transaction rolled back.
 
-Serve the repository over HTTP, e.g. `python3 -m http.server 8000`, then open localhost:8000.
-Direct opening of `index.html` may work, but a local server matches deployment.
+## Still needs live verification / setup before broad enrollment
+1. **Supabase Auth URL configuration:** Set Site URL to `https://cad-to-career.vercel.app` and allow redirect URLs including `https://cad-to-career.vercel.app/**` in Supabase Dashboard → Authentication → URL Configuration. This setting cannot be changed with the current connected action set and is not verified.
+2. **Real registration QA:** Confirm email verification link, password reset, logout, new-device sign-in and a saved CAD drawing using two test devices.
+3. **Reviewer identity:** Sign in as the designated reviewer, then have an administrator assign that user's UUID in `public.reviewer_memberships`. The reviewer role is never granted through public self-service. Test project approval and certificate issuance end-to-end.
+4. **Final public policies:** Name a legal operator/support channel; publish finalized privacy, retention, deletion and terms.
+5. **Account deletion/data export:** Export of local state is implemented; cloud account deletion and complete subject data export need a hardened endpoint and separate QA.
+6. **Production file controls:** Verify native CAD file signatures and storage quotas in a trusted upload API, add antivirus/malware scanning and periodic orphan cleanup before allowing arbitrary public uploads.
+7. **Browser QA:** Android Chrome, desktop browsers, screen readers, service worker upgrades, and internet disconnection/reconnection.
+8. **Performance and error monitoring:** Add incident alerts and server metrics.
 
-No installation, secrets, dependencies, or API keys are required for current preview.
+## Privacy and credential integrity
+- Cloud workspace JSON is for **practice**; localStorage and browser states are not trusted as certification evidence.
+- Official quiz and Project 1 scores are computed independently in a JWT-authenticated Supabase Edge Function and saved by a service role.
+- Human-reviewed Projects 2–5 require authorized reviewer membership. No student may self-assign a reviewer role.
+- A certificate is issued only after all official course and project requirements pass, capstone ≥85/100, confirmed email, and a server-side eligibility check.
+- Public verification returns name, program, issue date and validity only. It does not disclose student emails or CAD files.
 
-## Architecture and integrity
+## Running locally
+```bash
+python3 -m http.server 8000
+```
+Open http://localhost:8000. For local authentication, add `http://localhost:8000/**` to the Supabase Auth redirect allow-list. Do not replace production redirects with localhost.
 
-All client data currently resides in `localStorage`, key `cad-to-career-local-v1`. Browser progress is not tamper-resistant and is **not official credit**. Project 1 validation checks geometry in client code for practice only; its score must be recomputed by a server before official award. The portfolio is not public and there is no file upload service. There is no authentication, server-side progress, reviewer accounts or automatic certificate issuance. Do not promise these are live.
+## Testing
+```bash
+node --check app.js
+node --check cloud.js
+node --check data.js
+node tests/smoke.cjs
+node --test tests/geometry-feedback.cjs
+```
+The GitHub Actions workflow runs the checks. Tests do **not** substitute for a verified student login and live cross-device exercise.
 
-### Launch requirements (not implemented)
-
-1. Connect a new Supabase project with a reviewed cost, configure publishable key and env separately; do not expose service-role keys to browser.
-2. Implement Supabase Auth: signup, email verification, sign-in, password reset and secure sessions.
-3. Add RLS-protected tables for lesson progress, quizzes, submissions, reviews, certificate issuance, public profile opt-in and audit events.
-4. Regrade quiz and 2D geometry server-side, with versioned immutable assessment evidence. Never trust client score or user_metadata for approval.
-5. Store uploaded native CAD files in private buckets with owner-scoped access and real type/size/signature validation. Do not claim FCStd/STEP/blend are machine-inspected unless a parser exists.
-6. Add reviewers/admin with server-enforced role access; only approved reviewers can approve Projects 2–5. Require capstone >=85/100 and all course requirements.
-7. Issue unique, public-verifyable, tamper-resistant certificate PDFs from server; minimize exposed personal info and allow revocation.
-8. Add privacy policy, terms, help/support, operational monitoring, automated end-to-end tests, usability/accessibility audits, content proofreading and custom domain.
-9. Verify across Android devices and desktop browsers; run release security audit.
-
-## Course progression
-
-Quiz >=80% and actual exercise self-confirmation required. With three questions, all three must be correct. Locally confirmed lessons are distinguished from verified course credit.
-
-## Lab data schema
-
-Export JSON has format `cad-to-career-v1`, units `mm`, shapes array:
-- Rectangles: `{id,type:"rect",x,y,w,h}` (lower-left origin)
-- Circles: `{id,type:"circle",x,y,d}`
-The on-screen canvas transforms into SVG Y-coordinates; geometry stays in millimeters.
-
-## Security
-
-There are no credentials in the repo. Site headers set baseline content security policy. Do not store sensitive personal data or upload confidential designs until backend and privacy controls are finished.
+## Deployment
+Main-branch pushes deploy automatically through Vercel. Keep preview deployment protection enabled. Check the new commit's production deployment status before release.
 
 ## License
-
-Source is private and owned by the repository owner; no public open-source license has been assigned.
+Repository remains private with no declared open-source license. Course content is free to access, but do not assume source redistribution permissions.
