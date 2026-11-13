@@ -16,7 +16,8 @@
 [data-margin-top="28"]{margin-top:28px}
 [data-margin-top="36"]{margin-top:36px}
 [data-wrap]{flex-wrap:wrap}
-[data-hidden]{display:none}
+[data-hidden]{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+label.btn:focus-within{outline:3px solid #62e2d2;outline-offset:3px}
 [data-grid-full]{grid-column:1/-1}
 [data-max-width="800"]{max-width:800px}
 progress.progress-track{display:block;width:100%;height:7px;padding:0;border:0;appearance:none;-webkit-appearance:none;overflow:hidden;background:#1e3448;border-radius:20px}

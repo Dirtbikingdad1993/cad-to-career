@@ -25,3 +25,4 @@ dd{margin:0;word-break:break-word}
 small{color:#97b0c3}
 @media(max-width:460px){dl{grid-template-columns:1fr;gap:3px}dd{margin:0 0 8px}}
 form label{width:100%}
+#result-details[hidden]{display:none}
