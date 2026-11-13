@@ -1,0 +1,102 @@
+{
+  "name": "ProgressRecord",
+  "type": "object",
+  "properties": {
+    "student_id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "lesson",
+        "skill",
+        "project",
+        "lab"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "yellow",
+        "teal"
+      ]
+    },
+    "item": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "in_progress",
+        "ready_for_review",
+        "submitted",
+        "needs_work",
+        "confirmed"
+      ],
+      "enumColors": [
+        "yellow",
+        "yellow",
+        "blue",
+        "red",
+        "green"
+      ]
+    },
+    "score": {
+      "type": "number"
+    },
+    "answers_json": {
+      "type": "string"
+    },
+    "auto_json": {
+      "type": "string"
+    },
+    "rubric_json": {
+      "type": "string"
+    },
+    "total_score": {
+      "type": "number"
+    },
+    "evidence_url": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    },
+    "reviewer_note": {
+      "type": "string"
+    },
+    "claimed_date": {
+      "type": "string"
+    },
+    "confirmed_date": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "student_id",
+    "kind",
+    "item",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
