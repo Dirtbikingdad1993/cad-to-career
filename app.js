@@ -172,6 +172,38 @@ document.addEventListener("change",function(e){if(e.target.id==="importLab")read
 document.addEventListener("keydown",function(e){if(page()!=="/lab/2d"||/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();document.getElementById("undo")?.click()}if(e.key==="Delete"||e.key==="Backspace"){e.preventDefault();document.getElementById("removeShape")?.click()}});
 
 document.addEventListener("submit",async function(e){
+ if(e.target?.id!=="submissionForm")return;
+ e.preventDefault();
+ const form=e.target,projectId=Number(form.getAttribute("data-id"));
+ const button=form.querySelector("button[type=submit]");
+ const output=document.getElementById("submissionResult");
+ const files=Array.from(form.querySelector('input[type="file"]').files||[]);
+ const notes=String(new FormData(form).get("notes")||"").trim();
+ const allowed=/\.(fcstd|step|stp|pdf|blend|png|jpg|jpeg|obj|stl|dxf|glb|json|svg)$/i;
+ try{
+  if(!cloudUser())throw Error("Sign in before submitting files.");
+  if(!Number.isInteger(projectId)||projectId<2||projectId>5)throw Error("Invalid project.");
+  if(files.length<2||files.length>8)throw Error("Include 2–8 evidence files (native source and exports).");
+  if(!notes||notes.length<30||notes.length>12000)throw Error("Write at least 30 characters explaining your design.");
+  if(projectId===5){const words=notes.split(/\s+/).filter(Boolean).length;if(words<150||words>300)throw Error("Capstone rationale must contain 150–300 words.");}
+  for(const file of files){if(!allowed.test(file.name)||file.size===0||file.size>25*1024*1024)throw Error("Unsupported or oversized file: "+file.name)}
+  if(files.reduce((sum,file)=>sum+file.size,0)>90*1024*1024)throw Error("Limit combined evidence to 90 MB.");
+  button.disabled=true;
+  const submissionId=crypto.randomUUID(),paths=[];
+  for(let i=0;i<files.length;i++){
+    if(output)output.textContent="Uploading file "+(i+1)+" of "+files.length+"…";
+    paths.push(await CAD_CLOUD.uploadEvidence(submissionId,files[i]));
+  }
+  if(output)output.textContent="Creating private review request…";
+  const result=await CAD_CLOUD.createSubmission(projectId,notes,paths,submissionId);
+  state.drafts[projectId]=notes;save();
+  if(output)output.innerHTML='<div class="notice">Submission received. Status: <strong>Needs Review</strong>. Reference: '+escapeHtml(result.id)+'. Your evidence stays private until an authorized reviewer evaluates it.</div>';
+  await refreshOfficialStatus();
+ }catch(error){if(output)output.innerHTML='<div class="notice warning">'+escapeHtml(error.message||"Upload failed")+'</div>'}
+ finally{if(button)button.disabled=false}
+});
+
+document.addEventListener("submit",async function(e){
  const id=e.target?.id;
  if(!["loginForm","registerForm","forgotForm","passwordForm"].includes(id))return;
  e.preventDefault();
