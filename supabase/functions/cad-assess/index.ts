@@ -61,7 +61,7 @@ async function reviewerRole(userId){
 }
 async function projectReview(req,user,body){
  const role=await reviewerRole(user.id);
- if(!role) return response(req,{error:"Reviewer access required."},403);
+ if(!role)return response(req,{error:"Reviewer access required."},403);
  if(body.action==="review_queue"){
   const pending=await database("project_submissions","?status=eq.needs_review&project_id=gt.1&select=id,project_id,user_id,submitted_notes,evidence_paths,submitted_at&order=submitted_at.asc&limit=100");
   return response(req,{role,pending});
@@ -71,15 +71,14 @@ async function projectReview(req,user,body){
  const verdict=String(body.verdict||""),score=Number(body.score);
  if(!uid(id)||!["approved","changes_requested","rejected"].includes(verdict)||!Number.isInteger(score)||score<0||score>100)
   return response(req,{error:"Invalid review fields"},400);
- const entries=await database("project_submissions","?id=eq."+id+"&select=id,user_id,project_id,status");
- const sub=entries?.[0];
- if(!sub||sub.project_id<2||sub.status!=="needs_review")return response(req,{error:"Submission not eligible for review"},409);
- const required=sub.project_id===5?85:80;
- if(verdict==="approved"&&score<required)return response(req,{error:"Approval score must meet project rubric threshold"},400);
  const feedback=String(body.feedback||"").slice(0,2500);
- await database("project_reviews","","POST",{submission_id:id,reviewer_id:user.id,verdict,score,feedback,rubric:{"version":"rubric-v1"}});
- await database("project_submissions","?id=eq."+id,"PATCH",{status:verdict,score,reviewer_id:user.id,reviewed_at:new Date().toISOString()});
- return response(req,{ok:true,id,verdict,score});
+ // Row lock, self-review ban, reviewer lookup, rubric threshold and
+ // review+status update are all committed in ONE database transaction.
+ const result=await database("rpc/cad_finish_review","","POST",{
+  p_submission_id:id,p_reviewer_id:user.id,p_verdict:verdict,
+  p_score:score,p_feedback:feedback
+ });
+ return response(req,{ok:true,id,verdict:result.verdict,score:result.score});
 }
 async function signedReviewEvidence(req,user,body){
  const role=await reviewerRole(user.id);
