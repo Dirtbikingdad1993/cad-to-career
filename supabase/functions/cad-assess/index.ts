@@ -2,7 +2,7 @@
 // Service key stays only in Supabase Edge Function environment.
 const BASE=Deno.env.get("SUPABASE_URL")||"";
 const SERVICE=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
-const QUIZ_KEYS=["ABC","ABC","CAB","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC"];
+const QUIZ_KEYS=["ABC","ABC","CAB","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","AAC","ABC","AAC","ABC","AAC","ABC","AAC"];
 const ASSESSMENT_VERSION="foundations-v1";
 function cors(req){
  const origin=req.headers.get("origin")||"";
@@ -167,3 +167,4 @@ Deno.serve(async(req)=>{
   return response(req,{error:"Assessment could not be completed. Try again."},500);
  }
 });
+

@@ -27,5 +27,7 @@ jobs:
       - name: Validate curriculum and application integrity
         run: |
           node tests/smoke.cjs
+          node --test tests/curriculum-integrity.cjs
           node --test tests/geometry-feedback.cjs
           node tests/cloud-sync.cjs
+

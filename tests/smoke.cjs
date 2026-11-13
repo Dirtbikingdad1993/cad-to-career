@@ -24,6 +24,7 @@ const html=fs.readFileSync("index.html","utf8");
 assert.ok(html.includes("data.js")&&html.includes("app.js")&&html.includes("styles.css"));
 const app=fs.readFileSync("app.js","utf8");
 assert.ok(app.includes("gradeProject1(")&&app.includes("source:\"local-draft-only\""));
-assert.ok(app.includes("Credential not yet earned"),"No unverified certificate issuance");
+assert.ok(app.includes("CERTIFICATE NOT YET ISSUED"),"Certificate screen must describe its unissued state");
 assert.ok(app.includes("lab:[]"),"No pre-earned geometry");
 console.log("PASS: curriculum, project briefs, entrypoint, JavaScript syntax, integrity checks");
+
