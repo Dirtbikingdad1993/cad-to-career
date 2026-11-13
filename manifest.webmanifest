@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "CAD to Career — Free Engineering Education",
+  "short_name": "CAD to Career",
+  "description": "Start CAD on Android and demonstrate real drafting and design skills.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#08111f",
+  "theme_color": "#0b1527",
+  "categories": [
+    "education",
+    "productivity",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
