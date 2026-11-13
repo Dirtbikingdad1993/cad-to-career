@@ -110,7 +110,7 @@ function sidebarCloudHtml(){return cloudUser()?'<span class="badge done">Cloud a
 function topCloudHtml(){return '<span class="pill" id="cloudBadge">'+escapeHtml(cloudStatus)+'</span><a class="btn small ghost" href="'+(cloudUser()?"#/settings":"#/login")+'">'+(cloudUser()?"Account":"Sign in")+'</a>'}
 function cloudNoticeText(){return cloudUser()?"Signed in as "+escapeHtml(cloudUser().email||"student")+". Your practice workspace can sync to Supabase when online. Official certification still requires verified reviewer assessment.":"Guest mode saves progress on this device only. Sign in or create a free account to carry your progress between your phone and computer."}
 function dashboardCloudMessage(){return cloudUser()?"Your practice progress and CAD geometry are stored privately in the cloud after synchronization. Locally recorded quiz results are not verified credential credit.":"This is browser-only practice progress. Create a free account to sync it online. This is not verified credential credit."}
-function accountPanelHtml(){return '<section class="panel" style="margin-top:20px"><h3>Cloud account & sync</h3>'+(cloudUser()?'<p>Signed in as <strong>'+escapeHtml(cloudUser().email||"Student")+'</strong>. <span id="accountCloudStatus">'+escapeHtml(cloudStatus)+'</span>.</p><div class="actions"><button class="btn primary" type="button" id="syncNow">Save online now</button><button class="btn" type="button" id="importGuest">Import guest practice</button><button class="btn warning" type="button" id="signOut">Sign out</button></div><p class="smalltext muted">You can log out and sign in again on another device to retrieve saved work. Keep a backup if you intend to work offline for a long period.</p>':'<p>Your current learning progress has no online backup.</p><div class="actions"><a class="btn primary" href="#/register">Create free account</a><a class="btn" href="#/login">Sign in</a></div>')+'</section>'}
+function accountPanelHtml(){return '<section class="panel" style="margin-top:20px"><h3>Cloud account & sync</h3>'+(cloudUser()?'<p>Signed in as <strong>'+escapeHtml(cloudUser().email||"Student")+'</strong>. <span id="accountCloudStatus">'+escapeHtml(cloudStatus)+'</span>.</p><div class="actions"><button class="btn primary" type="button" id="syncNow">Save online now</button><button class="btn" type="button" id="importGuest">Import guest practice</button><button class="btn warning" type="button" id="signOut">Sign out</button></div><p class="smalltext muted">You can log out and sign in again on another device to retrieve saved work. Keep a backup if you intend to work offline for a long period.</p>':'<p>Your current learning progress has no online backup.</p><div class="actions"><a class="btn primary" href="#/register">Create free account</a><a class="btn" href="#/login">Sign in</a></div>')+'</section>' + (reviewerRole?'<div class="actions"><a href="#/reviewer" class="btn">Open authorized reviewer desk</a></div>':'')}
 function showSocialSignIn(){
  var container=document.getElementById("social-signin");
  if(!container||!window.CAD_SOCIAL)return;
@@ -219,7 +219,24 @@ function mergeGuestPractice(){
  save();render();notify("Guest practice added. Cloud save scheduled.");
 }
 
-function render(){var p=page();if(p==="/login"||p==="/register"||p==="/forgot-password"||p==="/reset-password")accountPage(p);else if(p==="/")overview();else if(p==="/courses")courses();else if(p.indexOf("/learn/")===0)lesson(p.split("/")[2]);else if(p==="/lab/2d")lab();else if(p==="/projects")projects();else if(/^\/projects\/[1-5]$/.test(p))project(Number(p.split("/")[2]));else if(p==="/dashboard")dashboard();else if(p==="/portfolio")portfolio();else if(p==="/certificate")certificate();else if(/^\/verify\/[0-9a-f-]{36}$/i.test(p))publicVerification(p.split("/")[2]);else if(p==="/settings")settings();else notfound()}
+function reviewerDesk(){
+ if(!cloudUser()||!reviewerRole){layout('<div class="eyebrow">AUTHORIZED REVIEWERS ONLY</div><h1>Reviewer desk</h1><div class="notice warning">An administrator must grant reviewer membership. Student accounts cannot approve their own work.</div>',"Reviewer desk");return}
+ layout('<div class="eyebrow">ASSESSMENT OPERATIONS</div><h1>Project review queue</h1><p class="muted">Inspect native CAD files, exported geometry and dimensional evidence before issuing a score. Reviews are restricted to server-authorized reviewer identities.</p><div class="actions"><button class="btn" id="refreshReviews">Refresh queue</button></div><div id="reviewQueue" class="list"><div class="notice">Loading private submissions…</div></div>',"Reviewer desk");
+ loadReviewerQueue();
+}
+async function loadReviewerQueue(){
+ const target=document.getElementById("reviewQueue");if(!target)return;
+ try{
+  const data=await CAD_CLOUD.loadReviewQueue(),list=data.pending||[];
+  if(!list.length){target.innerHTML='<div class="notice">No submissions are waiting for review.</div>';return}
+  target.innerHTML=list.map(function(sub){
+   const files=(sub.evidence_paths||[]).map(function(path,i){return '<button type="button" class="btn small" data-review-file="'+escapeHtml(path)+'" data-submission-id="'+escapeHtml(sub.id)+'">Open evidence '+(i+1)+' ↗</button>'}).join(" ");
+   return '<section class="panel"><div class="row between"><h3>Project '+Number(sub.project_id)+' · '+escapeHtml(sub.id)+'</h3><span class="badge pending">Needs review</span></div><p class="smalltext muted">Submitted '+escapeHtml(new Date(sub.submitted_at).toLocaleString())+'</p><p>'+escapeHtml(sub.submitted_notes||"")+'</p><div class="actions">'+files+'</div><form class="reviewForm stack" data-id="'+escapeHtml(sub.id)+'" style="margin-top:20px"><div class="fields"><label class="field">Score (0–100)<input type="number" name="score" min="0" max="100" required/></label><label class="field">Decision<select name="verdict" required><option value="changes_requested">Request changes</option><option value="approved">Approve</option><option value="rejected">Reject</option></select></label></div><label class="field">Rubric feedback<textarea name="feedback" maxlength="2500" placeholder="Document dimensional findings and requested fixes"></textarea></label><button class="btn primary" type="submit">Submit authenticated review</button><div role="status" class="reviewResult"></div></form></section>';
+  }).join("");
+ }catch(error){target.innerHTML='<div class="notice warning">'+escapeHtml(error.message||"Could not load review queue")+'</div>'}
+}
+
+function render(){var p=page();if(p==="/login"||p==="/register"||p==="/forgot-password"||p==="/reset-password")accountPage(p);else if(p==="/")overview();else if(p==="/courses")courses();else if(p.indexOf("/learn/")===0)lesson(p.split("/")[2]);else if(p==="/lab/2d")lab();else if(p==="/projects")projects();else if(/^\/projects\/[1-5]$/.test(p))project(Number(p.split("/")[2]));else if(p==="/dashboard")dashboard();else if(p==="/portfolio")portfolio();else if(p==="/reviewer")reviewerDesk();else if(p==="/certificate")certificate();else if(/^\/verify\/[0-9a-f-]{36}$/i.test(p))publicVerification(p.split("/")[2]);else if(p==="/settings")settings();else notfound()}
 function notify(msg){var n=document.getElementById("flash");if(!n){n=document.createElement("div");n.id="flash";n.setAttribute("role","status");n.style.cssText="position:fixed;z-index:90;right:16px;bottom:80px;max-width:340px;background:#183e42;border:1px solid #54d5c6;padding:14px 18px;border-radius:10px;color:#e0fff6;font-size:13px;box-shadow:0 15px 40px #0008";document.body.appendChild(n)}n.textContent=msg;setTimeout(function(){if(n.parentNode)n.remove()},3900)}
 document.addEventListener("submit",function(e){if(e.target.id!=="quizForm")return;e.preventDefault();var id=Number(e.target.getAttribute("data-id")),l=content.lessons.find(function(x){return x.id===id}),correct=0;var fd=new FormData(e.target);l.quiz.forEach(function(q,i){if(fd.get("q"+i)===q.answer)correct++});var score=Math.round(correct/l.quiz.length*100),pass=score>=80;state.quizzes[id]={score:score,passed:pass,date:new Date().toISOString()};if(!pass)state.completed=state.completed.filter(function(n){return n!==id});save();var out=document.getElementById("quizResult");if(out)out.innerHTML='<div class="notice '+(pass?"":"warning")+'" style="margin-top:16px"><strong>'+score+'% · '+(pass?"Passed":"Retry required")+'</strong><br>'+l.quiz.map(function(q,i){return 'Question '+(i+1)+': '+(fd.get("q"+i)===q.answer?"Correct":"Incorrect; review lesson content")+'.'}).join("<br>")+'</div>';var button=document.getElementById("completeLesson");if(button)button.disabled=!pass;
  if(cloudUser()){
@@ -234,6 +251,48 @@ document.addEventListener("click",function(e){var el=e.target.closest("button");
 function readFile(input,cb){var f=input.files&&input.files[0];if(!f)return;if(f.size>2e6){notify("JSON file must be smaller than 2 MB.");return}var reader=new FileReader();reader.onload=function(){try{cb(JSON.parse(reader.result))}catch(e){notify("Invalid or incompatible JSON.")}};reader.readAsText(f)}
 document.addEventListener("change",function(e){if(e.target.id==="importLab")readFile(e.target,function(obj){if(obj.format!=="cad-to-career-v1"||!Array.isArray(obj.shapes)||obj.shapes.length>1000)throw Error("Invalid CAD schema");var shapes=obj.shapes.map(function(s,i){var keys=s.type==="rect"?["x","y","w","h"]:s.type==="circle"?["x","y","d"]:null;if(!keys)throw Error("Unknown type");var r={id:"import-"+i+"-"+Date.now(),type:s.type};keys.forEach(function(k){if(typeof s[k]!=="number"||!Number.isFinite(s[k])||Math.abs(s[k])>10000)throw Error("Invalid number");r[k]=s[k]});if((r.w!==undefined&&r.w<=0)||(r.h!==undefined&&r.h<=0)||(r.d!==undefined&&r.d<=0))throw Error("Invalid size");return r});record();state.lab=shapes;selected=null;state.project1=null;save();lab();notify("CAD geometry imported.")});if(e.target.id==="restore")readFile(e.target,function(obj){if(obj.format!=="cad-progress-v1"||!obj.data||!Array.isArray(obj.data.completed)||!Array.isArray(obj.data.lab))throw Error("Invalid backup");if(!confirm("Replace all current local progress with this backup?"))return;var d=obj.data;state={completed:d.completed.filter(function(x){return Number.isInteger(x)&&x>=1&&x<=20}).slice(0,20),quizzes:d.quizzes&&typeof d.quizzes==="object"?d.quizzes:{},project1:null,drafts:d.drafts&&typeof d.drafts==="object"?d.drafts:{},notes:{},portfolio:[],displayName:String(d.displayName||"").slice(0,80),lab:d.lab.slice(0,1000)};state.project1=null;save();render();notify("Backup restored. Project validation needs to be rerun.")})});
 document.addEventListener("keydown",function(e){if(page()!=="/lab/2d"||/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();document.getElementById("undo")?.click()}if(e.key==="Delete"||e.key==="Backspace"){e.preventDefault();document.getElementById("removeShape")?.click()}});
+
+document.addEventListener("submit",async function(e){
+ if(e.target?.id!=="certificateRequestForm")return;
+ e.preventDefault();
+ const form=e.target,button=form.querySelector("button[type=submit]"),out=document.getElementById("certificateRequestResult");
+ button.disabled=true;
+ try{
+  const name=String(new FormData(form).get("publicName")||"").trim();
+  const result=await CAD_CLOUD.issueCertificate(name);
+  if(result.certificate){await refreshOfficialStatus();notify("Free credential issued and recorded in the verification registry.");}
+  else throw Error("The certificate could not be issued.");
+ }catch(error){if(out)out.innerHTML='<div class="notice warning">'+escapeHtml(error.message||"Requirements are not complete")+'</div>'}
+ finally{button.disabled=false}
+});
+document.addEventListener("submit",async function(e){
+ if(!e.target?.classList?.contains("reviewForm"))return;
+ e.preventDefault();
+ const form=e.target,button=form.querySelector('button[type="submit"]'),out=form.querySelector(".reviewResult"),fd=new FormData(form);
+ button.disabled=true;
+ try{
+  const result=await CAD_CLOUD.reviewProject(form.getAttribute("data-id"),String(fd.get("verdict")),Number(fd.get("score")),String(fd.get("feedback")||""));
+  if(out)out.innerHTML='<div class="notice">Decision recorded: '+escapeHtml(result.verdict)+' · '+Number(result.score)+'/100</div>';
+  await loadReviewerQueue();
+ }catch(error){if(out)out.innerHTML='<div class="notice warning">'+escapeHtml(error.message||"Review failed")+'</div>'}
+ finally{button.disabled=false}
+});
+document.addEventListener("click",async function(e){
+ const button=e.target.closest("button");if(!button)return;
+ if(button.id==="refreshVerified"){button.disabled=true;await refreshOfficialStatus();button.disabled=false}
+ if(button.id==="refreshReviews"){await loadReviewerQueue()}
+ if(button.id==="printCertificate"){window.print()}
+ if(button.hasAttribute("data-review-file")){
+   const popup=window.open("about:blank","_blank");
+   try{
+    const result=await CAD_CLOUD.signedEvidence(button.getAttribute("data-submission-id"),button.getAttribute("data-review-file"));
+    const checked=new URL(result.url);
+    if(checked.protocol!=="https:"||checked.hostname!=="kcerxxauczxydmexcdly.supabase.co")throw Error("Untrusted evidence URL");
+    if(popup)popup.location.href=result.url;
+    else window.location.href=result.url;
+   }catch(error){if(popup)popup.close();notify("Cannot open evidence: "+error.message)}
+ }
+});
 
 document.addEventListener("submit",async function(e){
  if(e.target?.id!=="submissionForm")return;
