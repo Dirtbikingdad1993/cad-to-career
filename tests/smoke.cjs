@@ -15,7 +15,7 @@ for(const lesson of d.lessons){
  for(const q of lesson.quiz){
   assert.equal(q.options.length,3);
   assert.ok(["A","B","C"].includes(q.answer),"correct answer required");
-  assert.ok(q.options.every(opt=>opt.length>3),"nonempty quiz options");
+  assert.ok(q.options.every(opt=>typeof opt==="string" && opt.trim().length>0),"nonempty quiz options");
  }
 }
 for(const p of d.projects){assert.ok(p.brief.length>80);assert.ok(p.evidence.length>30)}

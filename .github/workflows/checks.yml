@@ -24,4 +24,6 @@ jobs:
           node --check app.js
           node --check data.js
       - name: Validate curriculum and application integrity
-        run: node tests/smoke.cjs
+        run: |
+          node tests/smoke.cjs
+          node --test tests/geometry-feedback.cjs
