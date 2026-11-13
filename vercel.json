@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "buildCommand": "node scripts/build-public.mjs",
+  "outputDirectory": "vercel-output",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- ':(top,glob)*.html' ':(top,glob)*.js' ':(top,glob)*.css' ':(top,glob)*.svg' manifest.webmanifest robots.txt vercel.json resources pilot scripts/build-public.mjs",
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
@@ -30,3 +33,4 @@
     }
   ]
 }
+

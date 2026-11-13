@@ -26,9 +26,12 @@ jobs:
           node --check data.js
       - name: Validate curriculum and application integrity
         run: |
+          node scripts/build-public.mjs
+          node --test tests/public-output.cjs
           node tests/smoke.cjs
           node --test tests/curriculum-integrity.cjs
           node --test tests/csp-compatibility.cjs
+          node --test tests/expanded-curriculum.cjs
           node --test tests/geometry-feedback.cjs
           node tests/cloud-sync.cjs
 

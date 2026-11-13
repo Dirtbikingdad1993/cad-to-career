@@ -8,13 +8,14 @@
 - Responsive Android PWA with offline lesson files and on-device draft cache
 
 ## Implemented
-- 20 course lessons, 60 practice quiz questions, student dashboard
+- 53 detailed lessons, including 20 core lessons and 33 additional practice-only lessons, with 159 practice quiz questions and a student dashboard
 - Real 2D SVG CAD editor, numeric dimensions, import/export, undo/redo
 - Five project briefs and five assessment rubrics
 - Email/password account registration, login, logout, recovery and password updates
 - Private cloud workspace per authenticated user; automatic save after edits, restore on login
 - Guest-to-account import and account-to-account isolation
 - Official server-side quiz scoring, exercise confirmations and Project 1 geometry checks
+- The existing certificate uses only the original 20 core lessons. Additional lesson quizzes and confirmations are practice records and do not create official assessment entries or change credential eligibility.
 - Private evidence uploads for Projects 2–5 and Needs Review status
 - Reviewer-only queue, private short-lived evidence links, verdicts, rubric scores and feedback
 - Server-controlled credential eligibility and minimal public credential verification
@@ -66,3 +67,4 @@ Main-branch pushes deploy automatically through Vercel. Keep preview deployment 
 
 ## License
 Repository remains private with no declared open-source license. Course content is free to access, but do not assume source redistribution permissions.
+
