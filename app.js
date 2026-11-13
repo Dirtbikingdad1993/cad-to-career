@@ -50,4 +50,5 @@ document.addEventListener("change",function(e){if(e.target.id==="importLab")read
 document.addEventListener("keydown",function(e){if(page()!=="/lab/2d"||/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"){e.preventDefault();document.getElementById("undo")?.click()}if(e.key==="Delete"||e.key==="Backspace"){e.preventDefault();document.getElementById("removeShape")?.click()}});
 window.addEventListener("hashchange",function(){render();window.scrollTo(0,0)});
 render();
+if(typeof navigator!=="undefined" && "serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){/* offline is optional */})})}
 })();
