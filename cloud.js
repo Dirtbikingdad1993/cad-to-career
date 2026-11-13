@@ -82,6 +82,12 @@ async function signIn(email,password){
   if(!user)user=await request("/auth/v1/user","GET",undefined,true);
   recovery=false;emit();return user;
 }
+async function acceptOAuthSession(data){
+  if(!data?.access_token||!data?.refresh_token)throw Error("Session tokens were not returned.");
+  // Validate the new identity before replacing any existing signed-in session.
+  const profile=await request("/auth/v1/user","GET",undefined,false,{headers:{"Authorization":"Bearer "+data.access_token}});
+  acceptToken(data);user=profile;recovery=false;emit();return user;
+}
 async function signUp(email,password){
   const redirect=encodeURIComponent(location.origin+"/");
   const result=await request("/auth/v1/signup?redirect_to="+redirect,"POST",{email,password},false);
@@ -137,7 +143,6 @@ async function getReviewInfo(){
   if(!user)return [];
   return request("/rest/v1/project_reviews?select=submission_id,score,verdict,feedback,reviewed_at","GET",undefined,true);
 }
-
 async function assess(action,payload){
  if(!user)throw Error("Sign in to submit assessed work.");
  const data=await request("/functions/v1/cad-assess","POST",Object.assign({action},payload||{}),true);
@@ -153,7 +158,7 @@ async function issueCertificate(publicName){return assess("issue_certificate",{p
 async function signedEvidence(submissionId,path){return assess("review_file",{submissionId,path})}
 async function verifyCertificate(id){return request("/functions/v1/cad-verify?id="+encodeURIComponent(id),"GET",undefined,false)}
 
-window.CAD_CLOUD={init,signIn,signUp,signOut,sendRecovery,changePassword,loadWorkspace,saveWorkspace,
+window.CAD_CLOUD={init,signIn,signUp,signOut,acceptOAuthSession,sendRecovery,changePassword,loadWorkspace,saveWorkspace,
   uploadEvidence,createSubmission,listSubmissions,getReviewInfo,assess,officialStatus,gradeOfficialQuiz,confirmOfficialExercise,gradeOfficialGeometry,loadReviewQueue,reviewProject,issueCertificate,verifyCertificate,signedEvidence,
   currentUser:()=>user,isRecovering:()=>recovery,configured:()=>Boolean(url&&publishable)};
 })();
