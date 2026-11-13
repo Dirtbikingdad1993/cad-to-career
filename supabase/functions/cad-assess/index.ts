@@ -97,8 +97,10 @@ async function signedReviewEvidence(req,user,body){
  if(!signed.ok)return response(req,{error:"Could not open evidence"},503);
  const result=await signed.json();
  const location=String(result.signedURL||result.signedUrl||"");
- if(!location||!location.startsWith("/"))return response(req,{error:"No signed URL returned"},503);
- return response(req,{url:BASE+"/storage/v1"+location,expiresIn:300});
+ if(!location)return response(req,{error:"No signed URL returned"},503);
+ const absolute=new URL(location.startsWith("/storage/v1/")?BASE+location:location.startsWith("/")?BASE+"/storage/v1"+location:location);
+ if(absolute.origin!==new URL(BASE).origin||!absolute.pathname.startsWith("/storage/v1/object/sign/cad-submissions/"))return response(req,{error:"Invalid signed URL"},503);
+ return response(req,{url:absolute.toString(),expiresIn:300});
 }
 
 async function issueCertificate(req,user,body){
