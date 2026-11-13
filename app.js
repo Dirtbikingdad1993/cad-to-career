@@ -6,7 +6,7 @@ var KEY="cad-to-career-local-v1";
 var defaults={completed:[],quizzes:{},project1:null,drafts:{},notes:{},portfolio:[],displayName:"",lab:[]};
 var state={};try{var saved=JSON.parse(localStorage.getItem(KEY)||"{}");state=Object.assign({},defaults,saved);if(!Array.isArray(state.lab))state.lab=[];if(!Array.isArray(state.completed))state.completed=[]}catch(e){state=JSON.parse(JSON.stringify(defaults))}
 var selected=null,history=[],future=[],lastGrading=null;
-var activeStorageKey=KEY,cloudReady=false,cloudDirty=false,cloudSaveTimer=null,cloudSaveInFlight=null,cloudLoadSequence=0,cloudStatus="Guest • device only";
+var activeStorageKey=KEY,cloudReady=false,cloudDirty=false,cloudSaveTimer=null,cloudSaveInFlight=null,cloudLoadSequence=0,cloudStatus="Guest • device only",verifiedStatus=null,reviewerRole=null;
 var root=document.getElementById("root");
 function saveLocalOnly(){try{localStorage.setItem(activeStorageKey,JSON.stringify(state))}catch(e){notify("Browser storage unavailable. Export your progress instead.")}}
 function save(){state._updatedAt=new Date().toISOString();saveLocalOnly();if(window.CAD_CLOUD&&CAD_CLOUD.currentUser()&&cloudReady)queueCloudSync()}
@@ -72,6 +72,14 @@ function cleanWorkspace(raw){
 }
 function meaningfulWorkspace(value){return Boolean(value.completed.length||Object.keys(value.quizzes).length||Object.keys(value.drafts).length||value.lab.length||value.displayName)}
 function setCloudStatus(value){cloudStatus=value;var badge=document.getElementById("cloudBadge"),el=document.getElementById("accountCloudStatus");if(badge)badge.textContent=value;if(el)el.textContent=value}
+function refreshOfficialStatus(){
+ if(!cloudUser()){verifiedStatus=null;reviewerRole=null;return Promise.resolve(null)}
+ return CAD_CLOUD.officialStatus().then(function(result){
+   verifiedStatus=result.status||null;reviewerRole=result.reviewer||null;
+   if(["/dashboard","/certificate","/portfolio","/reviewer"].includes(page()))render();
+   return result;
+ }).catch(function(e){console.warn("Verified status unavailable:",e.message);return null});
+}
 function queueCloudSync(){
  if(!cloudUser()||!cloudReady)return;
  cloudDirty=true;setCloudStatus("Changes pending");
@@ -94,7 +102,7 @@ async function flushCloudSync(){
 async function enterCloudAccount(user){
  var sequence=++cloudLoadSequence;
  clearTimeout(cloudSaveTimer);cloudReady=false;cloudDirty=false;
- if(!user){activeStorageKey=KEY;try{state=cleanWorkspace(JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(_){state=cleanWorkspace({})}setCloudStatus("Guest • device only");selected=null;render();return}
+ if(!user){verifiedStatus=null;reviewerRole=null;activeStorageKey=KEY;try{state=cleanWorkspace(JSON.parse(localStorage.getItem(KEY)||"{}"))}catch(_){state=cleanWorkspace({})}setCloudStatus("Guest • device only");selected=null;render();return}
  activeStorageKey="cad-to-career-account-"+user.id;
  var cached;
  try{cached=cleanWorkspace(JSON.parse(localStorage.getItem(activeStorageKey)||"{}"))}catch(_){cached=cleanWorkspace({})}
@@ -112,6 +120,7 @@ async function enterCloudAccount(user){
    }else {state=cached;cloudDirty=true}
    cloudReady=true;saveLocalOnly();setCloudStatus(cloudDirty?"Changes pending":"Cloud saved");render();
    if(cloudDirty)queueCloudSync();
+   refreshOfficialStatus();
  }catch(e){
    if(sequence!==cloudLoadSequence)return;
    cloudReady=true;state=cached;setCloudStatus("Offline • changes pending");render();
