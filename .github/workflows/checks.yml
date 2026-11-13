@@ -28,6 +28,8 @@ jobs:
         run: |
           node tests/smoke.cjs
           node --test tests/curriculum-integrity.cjs
+          node --test tests/csp-compatibility.cjs
           node --test tests/geometry-feedback.cjs
           node tests/cloud-sync.cjs
+
 
