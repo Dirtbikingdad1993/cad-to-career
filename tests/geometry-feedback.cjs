@@ -5,8 +5,9 @@ const vm = require('node:vm');
 
 // Exercise the actual browser grader without launching a DOM or saving user data.
 const source = fs.readFileSync('app.js', 'utf8');
-const instrumented = source.replace(/\nrender\(\);\s*\}\)\(\);\s*$/, '\nwindow.__geometryTest = { gradeProject1 };\n})();\n');
-assert.notEqual(instrumented, source, 'Expected browser app entry point was not found');
+const renderCall = source.lastIndexOf('\nrender();');
+assert.ok(renderCall >= 0, 'Expected browser app entry point was not found');
+const instrumented = source.slice(0, renderCall) + '\nwindow.__geometryTest = { gradeProject1 };' + source.slice(renderCall + '\nrender();'.length);
 const sandbox = {
   window: { CAD_CONTENT: { lessons: [], projects: [], software: [] }, addEventListener() {} },
   document: { getElementById() { return {}; }, addEventListener() {} },
