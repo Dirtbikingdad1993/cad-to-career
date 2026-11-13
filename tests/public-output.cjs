@@ -5,9 +5,9 @@ const { join } = require('node:path');
 
 test('public build contains learner assets but excludes repository and backend files', () => {
   const root = 'vercel-output';
-  for (const file of ['index.html', 'app.js', 'data.js', 'styles.css', 'sw.js',
+  for (const file of ['index.html', 'app.js', 'data.js', 'expanded-curriculum.js', 'styles.css', 'sw.js',
     'verify.html', 'verify.css', 'pilot/index.html', 'pilot/styles.css',
-    'resources/project-1-brief.md']) {
+    'resources/project-1-brief.md', 'resources/technical-references.html']) {
     assert.ok(existsSync(join(root, file)), `missing public asset ${file}`);
   }
   for (const path of ['.github', '.git', 'supabase', 'docs', 'tests', 'scripts', 'apps']) {

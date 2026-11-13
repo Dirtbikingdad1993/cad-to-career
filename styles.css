@@ -24,3 +24,5 @@ progress.progress-track{display:block;width:100%;height:7px;padding:0;border:0;a
 progress.progress-track::-webkit-progress-bar{background:#1e3448;border-radius:20px}
 progress.progress-track::-webkit-progress-value{background:linear-gradient(90deg,#32bbae,#75e1d2);border-radius:20px}
 progress.progress-track::-moz-progress-bar{background:linear-gradient(90deg,#32bbae,#75e1d2);border-radius:20px}
+
+#flash{position:fixed;z-index:90;right:16px;bottom:80px;max-width:340px;background:#183e42;border:1px solid #54d5c6;padding:14px 18px;border-radius:10px;color:#e0fff6;font-size:13px;box-shadow:0 15px 40px #0008}
