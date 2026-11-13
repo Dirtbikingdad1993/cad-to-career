@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "node scripts/build-public.mjs",
+  "outputDirectory": "vercel-output",
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
@@ -30,3 +32,4 @@
     }
   ]
 }
+
