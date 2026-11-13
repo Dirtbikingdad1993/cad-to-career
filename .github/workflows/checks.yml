@@ -24,8 +24,10 @@ jobs:
           node --check app.js
           node --check cloud.js
           node --check data.js
+          node --check portfolio-ui.js
+          node --check supabase/functions/cad-portfolio/handler.mjs
       - name: Validate curriculum and application integrity
         run: |
           node tests/smoke.cjs
-          node --test tests/geometry-feedback.cjs
+          node --test tests/geometry-feedback.cjs tests/portfolio.test.mjs
           node tests/cloud-sync.cjs

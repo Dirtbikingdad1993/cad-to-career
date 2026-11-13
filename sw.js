@@ -1,6 +1,6 @@
 /* CAD to Career offline support. Learning state remains in browser localStorage. */
-const CACHE = 'cad-to-career-offline-v3';
-const ASSETS = ['/', '/index.html', '/styles.css', '/app.js', '/data.js', '/cloud-config.js', '/cloud.js', '/icon.svg', '/manifest.webmanifest', '/privacy.html', '/terms.html', '/resources/phone-to-desktop-roadmap.md', '/resources/project-1-brief.md', '/resources/project-2-brief.md', '/resources/project-3-brief.md', '/resources/project-4-brief.md', '/resources/project-5-brief.md'];
+const CACHE = 'cad-to-career-offline-v4';
+const ASSETS = ['/', '/index.html', '/styles.css', '/app.js', '/data.js', '/cloud-config.js', '/cloud.js', '/portfolio-ui.js', '/icon.svg', '/manifest.webmanifest', '/privacy.html', '/terms.html', '/resources/phone-to-desktop-roadmap.md', '/resources/project-1-brief.md', '/resources/project-2-brief.md', '/resources/project-3-brief.md', '/resources/project-4-brief.md', '/resources/project-5-brief.md'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
   self.skipWaiting();
