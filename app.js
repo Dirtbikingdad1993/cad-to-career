@@ -191,7 +191,15 @@ document.addEventListener("submit",async function(e){
 });
 document.addEventListener("click",async function(e){
  const b=e.target.closest("button");if(!b)return;
- if(b.id==="importGuest"){if(cloudUser())mergeGuestPractice();return}
+ if(b.id==="validateLab"&&cloudUser()){
+  const copy=JSON.parse(JSON.stringify(state.lab));
+  CAD_CLOUD.gradeOfficialGeometry(copy).then(function(result){
+    const box=document.getElementById("gradingResult");
+    if(box)box.insertAdjacentHTML("beforeend",'<div class="notice '+(result.pass?"":"warning")+'" style="margin-top:12px">Server result: <strong>'+Number(result.score)+'/100</strong>. '+(result.pass?"Project 1 verified and recorded in your account.":"Fix the listed dimensions and validate again.")+'</div>');
+    refreshOfficialStatus();
+  }).catch(function(error){notify("Cloud geometry validation failed: "+error.message)});
+}
+if(b.id==="importGuest"){if(cloudUser())mergeGuestPractice();return}
  if(b.id==="syncNow"){
    if(!cloudUser()){notify("Sign in to sync.");return}
    b.disabled=true;
