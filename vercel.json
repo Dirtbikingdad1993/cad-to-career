@@ -2,7 +2,7 @@
   "version": 2,
   "buildCommand": "node scripts/build-public.mjs",
   "outputDirectory": "vercel-output",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- index.html app.js expanded-curriculum.js cloud.js cloud-config.js data.js styles.css sw.js manifest.webmanifest icon.svg vercel.json privacy.html terms.html verify.html verify.js verify.css robots.txt resources pilot scripts/build-public.mjs",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- ':(top,glob)*.html' ':(top,glob)*.js' ':(top,glob)*.css' ':(top,glob)*.svg' manifest.webmanifest robots.txt vercel.json resources pilot scripts/build-public.mjs",
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [

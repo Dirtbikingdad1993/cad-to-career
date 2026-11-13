@@ -16,9 +16,28 @@ test('public build contains learner assets but excludes repository and backend f
   assert.ok(readdirSync(root).length > 0, 'build output must not be empty');
 });
 
-test('changes to public curriculum and build inputs trigger a Vercel build', () => {
-  const config = JSON.parse(require('node:fs').readFileSync('vercel.json', 'utf8'));
-  for (const path of ['expanded-curriculum.js', 'resources', 'pilot', 'verify.html', 'verify.js', 'verify.css', 'scripts/build-public.mjs']) {
-    assert.ok(config.ignoreCommand.split(' ').includes(path), `Vercel ignore command misses ${path}`);
-  }
+test('changes to public files trigger builds while unrelated app changes are skipped', () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const { execFileSync, spawnSync } = require('node:child_process');
+  const config = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
+  const dir = fs.mkdtempSync(join(os.tmpdir(), 'cad-build-check-'));
+  const git = (...args) => execFileSync('git', args, { cwd: dir, stdio: 'ignore' });
+  const commit = message => { git('add', '.'); git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', message); };
+  try {
+    git('init', '-q');
+    fs.writeFileSync(join(dir, 'index.html'), 'initial');
+    commit('initial');
+    for (const path of ['expanded-curriculum.js', 'verify.css', 'scripts/build-public.mjs', 'pilot/index.html', 'resources/technical-references.html']) {
+      const target = join(dir, path);
+      fs.mkdirSync(require('node:path').dirname(target), { recursive: true });
+      fs.writeFileSync(target, 'changed');
+      commit(path);
+      assert.equal(spawnSync('sh', ['-c', config.ignoreCommand], { cwd: dir }).status, 1, `Vercel would ignore ${path}`);
+    }
+    fs.mkdirSync(join(dir, 'apps/base44-site'), { recursive: true });
+    fs.writeFileSync(join(dir, 'apps/base44-site/package.json'), '{}');
+    commit('unrelated app');
+    assert.equal(spawnSync('sh', ['-c', config.ignoreCommand], { cwd: dir }).status, 0);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
