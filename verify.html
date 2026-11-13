@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0B1527">
+<meta name="description" content="Verify a CAD to Career completion certificate without exposing student email addresses.">
+<title>Verify a certificate · CAD to Career</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,Arial,sans-serif;background:#0b1527;color:#eaf3f7}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh}
+main{max-width:760px;margin:0 auto;padding:clamp(22px,5vw,56px) 20px 80px}
+a{color:#8de7db}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #8de7db;outline-offset:3px}
+.brand{display:flex;gap:12px;align-items:center;font-weight:750;margin-bottom:54px}
+.mark{display:grid;place-items:center;width:37px;height:37px;background:#1b4347;border:1px solid #73d6ca;border-radius:8px}
+h1{font-size:clamp(28px,6vw,44px);line-height:1.13;letter-spacing:-.03em;margin:0 0 16px}
+p{color:#bfd0d9;line-height:1.65}
+.panel{background:#13253a;border:1px solid #314760;border-radius:15px;padding:clamp(18px,4vw,30px);margin:26px 0}
+label{font-size:.88rem;font-weight:700;display:block;margin:0 0 10px}
+form{display:flex;flex-wrap:wrap;gap:10px}
+input{background:#0b182b;color:white;border:1px solid #51677b;border-radius:9px;min-width:0;padding:14px;flex:1 1 270px;font-size:16px}
+button{padding:14px 20px;border:0;border-radius:9px;background:#6fe0d3;color:#08212a;font-weight:800;cursor:pointer}
+button[disabled]{opacity:.55;cursor:wait}
+#result{padding:20px;border-radius:11px;border:1px solid #567083;background:#13253a}
+#result[data-state="valid"]{border-color:#75c8ad}
+#result[data-state="invalid"]{border-color:#e8aa79}
+#result[data-state="error"]{border-color:#df8890}
+h2{margin:0 0 8px;font-size:1.12rem}
+dl{display:grid;grid-template-columns:140px 1fr;gap:7px 14px;margin:14px 0 0}
+dt{color:#9fb4c7}
+dd{margin:0;word-break:break-word}
+small{color:#97b0c3}
+@media(max-width:460px){dl{grid-template-columns:1fr;gap:3px}dd{margin:0 0 8px}}
+</style>
+</head>
+<body>
+<main>
+<a class="brand" href="/"><span class="mark">C</span>CAD to Career</a>
+<h1>Verify a completion certificate</h1>
+<p>Check whether a CAD to Career certificate is currently recorded as valid. This service is read-only and provides minimal public details; it does not expose student email or private CAD submissions.</p>
+<section class="panel" aria-labelledby="check-title">
+<h2 id="check-title">Certificate identifier</h2>
+<form id="verify-form">
+<label for="certificate-id" style="width:100%">Enter the UUID printed on the certificate</label>
+<input id="certificate-id" name="id" required maxlength="36" minlength="36" autocomplete="off" inputmode="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" aria-describedby="format">
+<button id="verify-button" type="submit">Verify</button>
+</form>
+<p id="format"><small>Only certificate UUIDs can be checked. Do not enter student passwords or personal documents.</small></p>
+</section>
+<section id="result" aria-live="polite" data-state="idle">
+<h2 id="result-heading">No certificate checked yet</h2>
+<p id="result-description">Enter an identifier to check the independent verification service.</p>
+<dl id="result-details" hidden>
+<dt>Public name</dt><dd id="cert-name"></dd>
+<dt>Program</dt><dd id="cert-program"></dd>
+<dt>Date issued</dt><dd id="cert-date"></dd>
+<dt>Certificate ID</dt><dd id="cert-id"></dd>
+</dl>
+</section>
+<p><small>An unverified, missing, revoked, or temporarily unavailable record is never treated as an earned credential. CAD to Career certificates are platform completion records, not accredited professional licenses.</small></p>
+<p><a href="/">Return to free CAD lessons</a></p>
+</main>
+<script src="/cloud-config.js"></script>
+<script src="/verify.js" defer></script>
+</body>
+</html>
