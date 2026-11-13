@@ -1,0 +1,27 @@
+name: Free Portfolio and Pilot UX Checks
+on:
+  push:
+    paths:
+      - 'pilot/**'
+      - 'verify.*'
+      - 'tests/pilot-metrics.cjs'
+      - '.github/workflows/pilot-preview-checks.yml'
+  pull_request:
+    paths:
+      - 'pilot/**'
+      - 'verify.*'
+      - 'tests/pilot-metrics.cjs'
+      - '.github/workflows/pilot-preview-checks.yml'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check verify.js
+      - run: node --check pilot/metrics.js
+      - run: node --check pilot/app.js
+      - run: node tests/pilot-metrics.cjs
+      - run: node tests/smoke.cjs

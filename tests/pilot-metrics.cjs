@@ -1,0 +1,38 @@
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const metrics = require("../pilot/metrics.js");
+assert.equal(metrics.COHORTS.length, 5);
+assert.equal(new Set(metrics.COHORTS.map(c => c.id)).size, 5);
+assert.ok(metrics.COHORTS.every(c => c.name.startsWith("Demo") && c.size > 0));
+const all = metrics.summary(metrics.COHORTS);
+assert.equal(all.synthetic, true);
+assert.equal(all.cohorts, 5);
+assert.equal(all.learners, metrics.COHORTS.reduce((sum, c) => sum + c.size, 0));
+assert.ok(all.projectsReviewed <= all.projectsSubmitted);
+assert.ok(all.reviewedPortfolioLearners <= all.learners);
+assert.equal(all.certificates, 0, "Never invent issued certificates");
+assert.equal(all.fullyReviewedPortfolios, 0, "No real verified portfolios should appear");
+assert.equal(metrics.summary([]).learners, 0);
+const first = metrics.summary([metrics.COHORTS[0]]);
+assert.ok(first.learners > 0 && first.learners < all.learners);
+const csv = metrics.exportAggregateCsv(metrics.COHORTS);
+assert.ok(csv.includes("simulated_learners"));
+assert.ok(!csv.includes("email") && !csv.includes("@"));
+assert.equal(csv.split("\r\n").length, 6);
+for (const path of ["verify.js", "pilot/app.js", "pilot/metrics.js"]) {
+  new Function(fs.readFileSync(path, "utf8"));
+}
+const verifySource = fs.readFileSync("verify.js", "utf8");
+assert.ok(verifySource.includes("cad-verify"));
+assert.ok(verifySource.includes("valid === true"));
+assert.ok(verifySource.includes("data.revoked !== true"));
+assert.ok(verifySource.includes("textContent"), "Untrusted public names must not be inserted as HTML");
+assert.ok(!verifySource.includes("SUPABASE_SERVICE_ROLE_KEY"));
+const verifyServer = fs.readFileSync("supabase/functions/cad-verify/index.ts", "utf8");
+assert.ok(verifyServer.includes("revoked_at"));
+assert.ok(verifyServer.includes("valid:cert.revoked_at===null"));
+assert.ok(!verifyServer.includes("student_email"));
+const page = fs.readFileSync("pilot/index.html", "utf8");
+assert.ok(page.includes("SYNTHETIC DEMO"));
+assert.ok(page.includes("not implemented"));
+console.log("PASS: synthetic dashboard, portfolio verification contract and JS syntax");
