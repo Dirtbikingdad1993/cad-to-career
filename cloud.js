@@ -150,9 +150,10 @@ async function gradeOfficialGeometry(shapes){return assess("project1",{shapes})}
 async function loadReviewQueue(){return assess("review_queue")}
 async function reviewProject(submissionId,verdict,score,feedback){return assess("review",{submissionId,verdict,score,feedback})}
 async function issueCertificate(publicName){return assess("issue_certificate",{publicName})}
+async function signedEvidence(submissionId,path){return assess("review_file",{submissionId,path})}
 async function verifyCertificate(id){return request("/functions/v1/cad-verify?id="+encodeURIComponent(id),"GET",undefined,false)}
 
 window.CAD_CLOUD={init,signIn,signUp,signOut,sendRecovery,changePassword,loadWorkspace,saveWorkspace,
-  uploadEvidence,createSubmission,listSubmissions,getReviewInfo,assess,officialStatus,gradeOfficialQuiz,confirmOfficialExercise,gradeOfficialGeometry,loadReviewQueue,reviewProject,issueCertificate,verifyCertificate,
+  uploadEvidence,createSubmission,listSubmissions,getReviewInfo,assess,officialStatus,gradeOfficialQuiz,confirmOfficialExercise,gradeOfficialGeometry,loadReviewQueue,reviewProject,issueCertificate,verifyCertificate,signedEvidence,
   currentUser:()=>user,isRecovering:()=>recovery,configured:()=>Boolean(url&&publishable)};
 })();
