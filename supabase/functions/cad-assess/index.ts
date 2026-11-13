@@ -81,6 +81,26 @@ async function projectReview(req,user,body){
  await database("project_submissions","?id=eq."+id,"PATCH",{status:verdict,score,reviewer_id:user.id,reviewed_at:new Date().toISOString()});
  return response(req,{ok:true,id,verdict,score});
 }
+async function signedReviewEvidence(req,user,body){
+ const role=await reviewerRole(user.id);
+ if(!role)return response(req,{error:"Reviewer access required"},403);
+ const id=String(body.submissionId||""),path=String(body.path||"");
+ if(!uid(id)||path.length>500)return response(req,{error:"Invalid file request"},400);
+ const entries=await database("project_submissions","?id=eq."+id+"&select=id,user_id,evidence_paths");
+ const submission=entries?.[0];
+ if(!submission||!Array.isArray(submission.evidence_paths)||!submission.evidence_paths.includes(path)||!path.startsWith(submission.user_id+"/"))
+   return response(req,{error:"File does not belong to this submission"},403);
+ const signed=await fetch(BASE+"/storage/v1/object/sign/cad-submissions/"+path.split("/").map(encodeURIComponent).join("/"),{
+  method:"POST",headers:{"apikey":SERVICE,"Authorization":"Bearer "+SERVICE,"Content-Type":"application/json"},
+  body:JSON.stringify({expiresIn:300})
+ });
+ if(!signed.ok)return response(req,{error:"Could not open evidence"},503);
+ const result=await signed.json();
+ const location=String(result.signedURL||result.signedUrl||"");
+ if(!location||!location.startsWith("/"))return response(req,{error:"No signed URL returned"},503);
+ return response(req,{url:BASE+"/storage/v1"+location,expiresIn:300});
+}
+
 async function issueCertificate(req,user,body){
  if(!user.email_confirmed_at)return response(req,{error:"Email verification is required."},403);
  const data=await projectStatus(user.id);
@@ -135,6 +155,7 @@ Deno.serve(async(req)=>{
     return response(req,{...evaluation,verified:true});
    }
    case "review_queue":case "review":return await projectReview(req,user,body);
+   case "review_file":return await signedReviewEvidence(req,user,body);
    case "issue_certificate":return await issueCertificate(req,user,body);
    default:return response(req,{error:"Unknown assessment action"},400);
   }
