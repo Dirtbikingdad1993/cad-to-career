@@ -5,7 +5,7 @@ const { join } = require('node:path');
 
 test('public build contains learner assets but excludes repository and backend files', () => {
   const root = 'vercel-output';
-  for (const file of ['index.html', 'app.js', 'data.js', 'expanded-curriculum.js', 'styles.css', 'sw.js',
+  for (const file of ['index.html', 'app.js', 'data.js', 'expanded-curriculum.js', 'lesson-guides.js', 'styles.css', 'sw.js',
     'verify.html', 'verify.css', 'pilot/index.html', 'pilot/styles.css',
     'resources/project-1-brief.md', 'resources/technical-references.html']) {
     assert.ok(existsSync(join(root, file)), `missing public asset ${file}`);
@@ -28,7 +28,7 @@ test('changes to public files trigger builds while unrelated app changes are ski
     git('init', '-q');
     fs.writeFileSync(join(dir, 'index.html'), 'initial');
     commit('initial');
-    for (const path of ['expanded-curriculum.js', 'verify.css', 'scripts/build-public.mjs', 'pilot/index.html', 'resources/technical-references.html']) {
+    for (const path of ['expanded-curriculum.js', 'lesson-guides.js', 'verify.css', 'scripts/build-public.mjs', 'pilot/index.html', 'resources/technical-references.html']) {
       const target = join(dir, path);
       fs.mkdirSync(require('node:path').dirname(target), { recursive: true });
       fs.writeFileSync(target, 'changed');

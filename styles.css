@@ -26,3 +26,54 @@ progress.progress-track::-webkit-progress-value{background:linear-gradient(90deg
 progress.progress-track::-moz-progress-bar{background:linear-gradient(90deg,#32bbae,#75e1d2);border-radius:20px}
 
 #flash{position:fixed;z-index:90;right:16px;bottom:80px;max-width:340px;background:#183e42;border:1px solid #54d5c6;padding:14px 18px;border-radius:10px;color:#e0fff6;font-size:13px;box-shadow:0 15px 40px #0008}
+
+/* Lesson reading experience: structured, accessible, and usable on a phone. */
+.lesson-page{max-width:1020px;margin:0 auto;color:#e9f2fa}
+.lesson-back{display:inline-flex;align-items:center;min-height:40px;color:#a8becd;font-size:13px;font-weight:700;margin:-8px 0 13px}
+.lesson-back:hover{color:#80e5d8}
+.lesson-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(225px,31%);gap:24px;overflow:hidden;position:relative;border:1px solid #31495a;border-radius:22px;padding:38px;background:radial-gradient(ellipse at 96% 0%,#235265 0,transparent 52%),linear-gradient(125deg,#15273c,#101e31 66%,#102e39);box-shadow:0 20px 65px #0002}
+.lesson-hero-copy{min-width:0;position:relative;z-index:1}
+.lesson-kicker,.lesson-overline,.example-label,.task-label,.outline-label{font-size:10px;line-height:1.4;font-weight:800;letter-spacing:.15em;text-transform:uppercase;color:#75dfd1}
+.lesson-kicker span{color:#63869c;margin:0 6px}
+.lesson-hero h1{font:700 clamp(32px,4vw,48px)/1.1 "Space Grotesk",system-ui,sans-serif;letter-spacing:-.045em;max-width:650px;margin:18px 0 16px;color:#f4faff}
+.lesson-intro{font-size:15px;line-height:1.75;max-width:650px;color:#bed0dd;margin:0}
+.lesson-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:23px}
+.lesson-tags span{display:inline-flex;align-items:center;border:1px solid #41606b;border-radius:30px;background:#102b37a8;padding:7px 10px;color:#bce9e4;font-size:11px;font-weight:700}
+.lesson-hero-art{align-self:stretch;min-height:230px;border:1px solid #65a9aa42;border-radius:15px;background-color:#0e3040b5;background-image:linear-gradient(#8ad8cf0c 1px,transparent 1px),linear-gradient(90deg,#8ad8cf0c 1px,transparent 1px);background-size:20px 20px;color:#76ded1;padding:15px;display:flex;flex-direction:column;justify-content:space-between}
+.blueprint-label,.blueprint-caption{font-size:8px;letter-spacing:.13em;font-weight:800;color:#b8e9e1}
+.blueprint-label{display:flex;justify-content:space-between;gap:8px}.blueprint-label span{color:#76a9aa}.blueprint-caption{color:#7caeae}.blueprint-caption span{margin:0 6px;color:#5bd3c2}
+.lesson-hero-art svg{display:block;width:100%;max-height:190px}
+.lesson-outline{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:12px 0;margin:12px 0 0;border-bottom:1px solid #243a4c}
+.outline-label{color:#92a8ba;margin-right:auto}
+.lesson-outline button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:42px;padding:8px 12px;border:1px solid transparent;border-radius:9px;background:transparent;color:#b8cbd9;font-size:12px;font-weight:700}
+.lesson-outline button:hover{border-color:#3a6269;background:#132b35;color:#e7fffa}.lesson-outline button b{color:#6bd6c8;font-size:10px}
+.lesson-notice{margin:20px 0 0;padding:13px 16px;border:1px solid #284b54;border-radius:10px;background:#102c34;color:#b6d9d6;font-size:12px;line-height:1.6}
+.lesson-block{margin-top:40px;scroll-margin-top:24px;outline:none}
+.lesson-section-heading{display:flex;gap:17px;align-items:flex-start;margin-bottom:20px}
+.lesson-section-number{display:grid;place-items:center;flex:none;width:42px;height:42px;border:1px solid #37686c;border-radius:12px;background:#12363b;color:#82e5d8;font:700 14px "Space Grotesk",sans-serif}
+.lesson-section-heading h2,.lesson-confirm h2{font:700 clamp(23px,3vw,29px)/1.18 "Space Grotesk",system-ui,sans-serif;letter-spacing:-.035em;margin:5px 0 5px;color:#f0f8ff}
+.lesson-section-heading p{margin:0;color:#9eb3c3;line-height:1.6;font-size:13px}
+.lesson-reading{border:1px solid #293e52;border-radius:16px;background:#0e1d2f;padding:29px 32px;box-shadow:0 10px 35px #0001}
+.lesson-reading p{max-width:76ch;color:#c1d0dc;font-size:15px;line-height:1.85;margin:0 0 18px}
+.lesson-reading>p:last-child,.lesson-reading-note:last-child p{margin-bottom:0}.lesson-reading .lesson-lead{font-size:16px;line-height:1.85;color:#e3eef5}
+.lesson-reading-note{border-top:1px solid #293f50;margin-top:23px;padding-top:21px}.lesson-reading-note h3{font:700 16px "Space Grotesk",sans-serif;margin:0 0 10px;color:#e8f6f8}
+.lesson-example{display:grid;grid-template-columns:46px minmax(0,1fr);gap:18px;border:1px solid #34645f;border-radius:16px;padding:26px;background:linear-gradient(115deg,#153b3c,#102d36 75%)}
+.example-mark{display:grid;place-items:center;width:42px;height:42px;border:1px solid #65beac66;border-radius:11px;color:#a2f2dd;font-size:24px}
+.lesson-example p{font-size:15px;line-height:1.8;color:#d0e6e2;max-width:76ch;margin:10px 0 0}.lesson-example p+p{border-top:1px solid #5f94823d;padding-top:15px;margin-top:15px}
+.lesson-check{border:1px solid #31495b;background:#102235;border-radius:13px;margin-top:12px;overflow:hidden}
+.lesson-check summary{cursor:pointer;line-height:1.6;padding:17px 20px;font-weight:700;font-size:13px;color:#e3eef6}.lesson-check summary span{display:inline-block;margin-right:9px;color:#79ded2;font-size:10px;letter-spacing:.1em}.lesson-check p{border-top:1px solid #2b4355;margin:0;padding:16px 20px;color:#bfd2dd;font-size:14px;line-height:1.7}
+.lesson-task{border-left:3px solid #68daca;border-radius:8px;background:#122a37;padding:16px 19px;margin-bottom:15px}.lesson-task p{color:#e0eef2;font-size:15px;line-height:1.6;margin:7px 0 0}
+.lesson-steps{list-style:none;margin:0;padding:0;border:1px solid #293e52;border-radius:15px;background:#0e1d2f;overflow:hidden}
+.lesson-steps li{display:grid;grid-template-columns:32px minmax(0,1fr);gap:14px;align-items:start;padding:17px 20px}.lesson-steps li+li{border-top:1px solid #24394b}.lesson-steps li>span{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#17383e;color:#86ded1;font:700 12px "Space Grotesk",sans-serif}.lesson-steps p{color:#c7d8e2;line-height:1.7;font-size:14px;margin:3px 0 0}
+.lesson-caution{margin-top:14px;padding:16px 20px;border:1px solid #665747;border-radius:12px;background:#2d281f}.lesson-caution strong{color:#f5d3a7;font-size:13px}.lesson-caution p{color:#e4d2ba;font-size:13px;line-height:1.7;margin:6px 0 0}
+.lesson-reference{margin:18px 0 0;color:#91d8d0;font-size:13px;font-weight:700}
+.lesson-quiz{border:1px solid #293e52;border-radius:16px;background:#0e1d2f;padding:26px 30px}
+.quiz-intro{padding-bottom:14px;border-bottom:1px solid #2b4152}.quiz-intro strong{font-size:15px}.quiz-intro p{color:#a8bdcb;font-size:13px;line-height:1.6;margin:7px 0 0}
+.lesson-quiz .quizq{min-width:0;border:0;border-bottom:1px solid #294052;padding:22px 0;margin:0}
+.lesson-quiz .quizq legend{float:left;width:100%;display:flex;align-items:flex-start;gap:12px;color:#eef7fb;font-size:15px;font-weight:700;line-height:1.5;margin-bottom:14px;padding:0}
+.lesson-quiz .quizq legend+*{clear:both}.question-number{color:#73ddcf;font:700 12px "Space Grotesk",sans-serif;line-height:1.9}
+.lesson-quiz .option,.lesson-confirm .option{min-height:46px;padding:12px 14px;color:#d6e4ed;line-height:1.5;cursor:pointer}.lesson-quiz .option input,.lesson-confirm .option input{accent-color:#6ee0ce;flex:none;width:17px;height:17px}
+.lesson-quiz .actions{margin-top:22px}.lesson-quiz #quizResult:empty{display:none}
+.lesson-confirm{border:1px solid #36555a;border-radius:16px;padding:25px 28px;background:linear-gradient(130deg,#122f35,#102232);margin-top:20px}.lesson-confirm h2{font-size:23px}.lesson-confirm>div:first-child>p{max-width:72ch;color:#bdd0d6;font-size:13px;line-height:1.7;margin:8px 0 18px}.lesson-confirm .actions{margin-top:18px}
+.lesson-bottom-nav{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}.lesson-bottom-nav a{min-width:0;display:flex;flex-direction:column;gap:7px;padding:17px 19px;border:1px solid #2c4354;border-radius:12px;background:#0e1d2d}.lesson-bottom-nav a:hover{border-color:#539c92;text-decoration:none}.lesson-bottom-nav span{color:#7ed9ce;font-size:10px;font-weight:800;letter-spacing:.09em}.lesson-bottom-nav strong{color:#d7e7ef;font-size:13px;line-height:1.4}.lesson-bottom-nav .next{text-align:right;align-items:flex-end}
+@media(max-width:720px){.lesson-back{margin-top:-8px}.lesson-hero{grid-template-columns:1fr;padding:25px 22px;gap:20px;border-radius:17px}.lesson-hero h1{font-size:34px;margin:14px 0}.lesson-intro{font-size:14px;line-height:1.7}.lesson-hero-art{min-height:140px;max-height:165px;padding:11px}.lesson-hero-art svg{height:100px}.lesson-outline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px}.outline-label{grid-column:1/-1;margin:0 0 2px}.lesson-outline button{padding:8px 3px;font-size:11px;gap:4px}.lesson-block{margin-top:33px}.lesson-section-heading{gap:12px}.lesson-section-number{width:36px;height:36px}.lesson-reading{padding:22px 20px}.lesson-reading p,.lesson-reading .lesson-lead{font-size:14px;line-height:1.8}.lesson-example{grid-template-columns:1fr;gap:10px;padding:20px}.example-mark{width:34px;height:34px;font-size:19px}.lesson-example p{font-size:14px}.lesson-steps li{padding:15px}.lesson-quiz{padding:20px 18px}.lesson-confirm{padding:21px 19px}.lesson-bottom-nav a{padding:14px 12px}.lesson-bottom-nav strong{font-size:12px}}

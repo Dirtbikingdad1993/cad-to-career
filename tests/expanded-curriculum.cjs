@@ -39,7 +39,7 @@ function setup(hash = '#/courses', signedIn = false) {
     FormData: class { constructor(form) { this.answers = form.answers; } get(k) { return this.answers[Number(k.slice(1))]; } },
   };
   vm.createContext(context);
-  for (const file of ['data.js', 'expanded-curriculum.js']) vm.runInContext(fs.readFileSync(file, 'utf8'), context);
+  for (const file of ['data.js', 'expanded-curriculum.js', 'lesson-guides.js']) vm.runInContext(fs.readFileSync(file, 'utf8'), context);
   const app = fs.readFileSync('app.js', 'utf8').replace('render();\nif(typeof navigator', 'window.__testCleanWorkspace=cleanWorkspace;\nrender();\nif(typeof navigator');
   vm.runInContext(app, context);
   return { context, nodes, listeners, calls, store, lessons: window.CAD_CONTENT.lessons };
@@ -97,7 +97,7 @@ test('additional lessons do not call certificate assessment services', () => {
   const lesson = lessons.find(l => l.id === 53);
   const form = { id: 'quizForm', getAttribute: () => '53', answers: lesson.quiz.map(q => q.answer) };
   listeners.submit[0]({ target: form, preventDefault() {} });
-  const button = { id: 'completeLesson', getAttribute: () => '53' };
+  const button = { id: 'completeLesson', getAttribute: name => name === 'data-lesson' ? '53' : null };
   listeners.click[0]({ target: { closest: () => button } });
   assert.equal(calls.quiz.length, 0);
   assert.equal(calls.exercise.length, 0);
@@ -113,4 +113,19 @@ test('the original core quiz still calls the official assessment service when si
   listeners.submit[0]({ target: form, preventDefault() {} });
   assert.equal(calls.quiz.length, 1);
   assert.equal(calls.quiz[0].id, 1);
+});
+
+
+test('every lesson page renders its own example, guided steps, and assessment', () => {
+  for (let id = 1; id <= 53; id++) {
+    const { nodes, lessons } = setup(`#/learn/lesson-${id}`);
+    const lesson = lessons.find(item => item.id === id);
+    const renderedText = nodes.root.innerHTML.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+    assert.ok(renderedText.includes(lesson.title), `lesson ${id} title`);
+    assert.ok(renderedText.includes(lesson.guide.steps[0]), `lesson ${id} practice`);
+    assert.match(nodes.root.innerHTML, /Worked example/);
+    assert.match(nodes.root.innerHTML, /Quick check/i);
+    assert.match(nodes.root.innerHTML, /id="quizForm"/);
+    assert.match(nodes.root.innerHTML, /id="completeLesson"/);
+  }
 });
