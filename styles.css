@@ -26,3 +26,11 @@ progress.progress-track::-webkit-progress-value{background:linear-gradient(90deg
 progress.progress-track::-moz-progress-bar{background:linear-gradient(90deg,#32bbae,#75e1d2);border-radius:20px}
 
 #flash{position:fixed;z-index:90;right:16px;bottom:80px;max-width:340px;background:#183e42;border:1px solid #54d5c6;padding:14px 18px;border-radius:10px;color:#e0fff6;font-size:13px;box-shadow:0 15px 40px #0008}
+
+/* Portfolio case studies and opt-in public pages */
+.portfolio-profile{margin-top:18px}.portfolio-share{border-top:1px solid var(--border, #d7e0e7);margin-top:22px;padding-top:20px}.portfolio-entry summary{cursor:pointer;display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap}.portfolio-entry summary::marker{color:#008c83}.portfolio-entry form{padding-top:20px}.portfolio-text{white-space:pre-wrap;overflow-wrap:anywhere}.portfolio-image-wrap{background:#eaf1f1;border-radius:10px;margin-bottom:18px;overflow:hidden;min-height:120px}.portfolio-image-wrap img{display:block;width:100%;max-height:360px;object-fit:contain}.portfolio-public-card{min-width:0}.portfolio-public-card h2{overflow-wrap:anywhere}.portfolio-hero h1{overflow-wrap:anywhere}
+
+@media(max-width:720px){.mobilebar a{flex:1;min-width:0;text-align:center;padding-left:2px;padding-right:2px}}
+@media(max-width:400px){.mobilebar a{font-size:9px}}
+
+.geometry-preview{margin:18px 0;padding:16px;border:1px solid #315a6a;border-radius:12px;background:#0a192c}.geometry-preview svg{display:block;width:100%;height:auto;max-height:260px;margin:10px 0;fill:none;stroke:#65dcca;stroke-width:1.2}.geometry-preview p{overflow-wrap:anywhere;font-size:12px}.geometry-preview code{overflow-wrap:anywhere}

@@ -24,6 +24,10 @@ jobs:
           node --check app.js
           node --check cloud.js
           node --check data.js
+          node --check portfolio-ui.js
+          node --check supabase/functions/cad-portfolio/handler.mjs
+      - name: Install isolated database test dependency
+        run: npm ci --prefix tests/db --ignore-scripts --no-audit --no-fund
       - name: Validate curriculum and application integrity
         run: |
           node scripts/build-public.mjs
@@ -32,7 +36,7 @@ jobs:
           node --test tests/curriculum-integrity.cjs
           node --test tests/csp-compatibility.cjs
           node --test tests/expanded-curriculum.cjs
-          node --test tests/geometry-feedback.cjs
+          node --test tests/geometry-feedback.cjs tests/portfolio.test.mjs tests/db/portfolio-quota.test.cjs tests/db/reviewer-transaction.test.cjs
           node tests/cloud-sync.cjs
 
 

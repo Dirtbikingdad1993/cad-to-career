@@ -152,8 +152,23 @@ async function reviewProject(submissionId,verdict,score,feedback){return assess(
 async function issueCertificate(publicName){return assess("issue_certificate",{publicName})}
 async function signedEvidence(submissionId,path){return assess("review_file",{submissionId,path})}
 async function verifyCertificate(id){return request("/functions/v1/cad-verify?id="+encodeURIComponent(id),"GET",undefined,false)}
+async function portfolioAction(action,values){
+  if(!user)throw Error("Sign in to manage your portfolio.");
+  return request("/functions/v1/cad-portfolio","POST",Object.assign({action},values||{}),true);
+}
+async function portfolioPublic(id){return request("/functions/v1/cad-portfolio?id="+encodeURIComponent(id),"GET",undefined,false)}
+async function portfolioCover(id,submissionId){
+  const res=await fetch(url+"/functions/v1/cad-portfolio?id="+encodeURIComponent(id)+"&cover="+encodeURIComponent(submissionId),{headers:{apikey:publishable}});
+  if(!res.ok)throw Error("Image unavailable.");
+  const type=(res.headers.get("Content-Type")||"").split(";")[0];
+  if(type!=="image/png"&&type!=="image/jpeg")throw Error("Invalid image.");
+  return res.blob();
+}
 
 window.CAD_CLOUD={init,signIn,signUp,signOut,sendRecovery,changePassword,loadWorkspace,saveWorkspace,
   uploadEvidence,createSubmission,listSubmissions,getReviewInfo,assess,officialStatus,gradeOfficialQuiz,confirmOfficialExercise,gradeOfficialGeometry,loadReviewQueue,reviewProject,issueCertificate,verifyCertificate,signedEvidence,
+  portfolioLoad:()=>portfolioAction("load"),portfolioSaveProfile:values=>portfolioAction("save_profile",values),
+  portfolioSaveEntry:values=>portfolioAction("save_entry",values),portfolioDeleteEntry:submissionId=>portfolioAction("delete_entry",{submissionId}),
+  portfolioRotateLink:()=>portfolioAction("rotate_link"),portfolioPublic,portfolioCover,
   currentUser:()=>user,isRecovering:()=>recovery,configured:()=>Boolean(url&&publishable)};
 })();

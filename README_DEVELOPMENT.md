@@ -68,3 +68,9 @@ Main-branch pushes deploy automatically through Vercel. Keep preview deployment 
 ## License
 Repository remains private with no declared open-source license. Course content is free to access, but do not assume source redistribution permissions.
 
+
+## Verified portfolio implementation
+
+The opt-in portfolio flow and verification limits are documented in
+[docs/VERIFIED_PORTFOLIOS.md](docs/VERIFIED_PORTFOLIOS.md). Real-account and
+reviewer testing remains a release requirement.

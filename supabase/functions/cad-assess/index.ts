@@ -45,6 +45,14 @@ function evaluatePlate(shapes){
  }
  return {score,pass:score===100,feedback:lines};
 }
+// Store only measured geometry, never learner-supplied IDs or arbitrary metadata.
+async function geometryEvidence(shapes){
+ const sanitized=shapes.map(s=>s.type==="rect"?{type:"rect",x:s.x,y:s.y,w:s.w,h:s.h}:{type:"circle",x:s.x,y:s.y,d:s.d});
+ const snapshot=JSON.stringify({format:"cad-plate-v1",units:"mm",shapes:sanitized});
+ const bytes=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(snapshot));
+ const sha256=Array.from(new Uint8Array(bytes),x=>x.toString(16).padStart(2,"0")).join("");
+ return JSON.stringify({kind:"geometry-evidence-v1",validator:ASSESSMENT_VERSION,snapshot,sha256});
+}
 async function projectStatus(userId){
  const id=encodeURIComponent(userId);
  const [quizzes,lessons,projects,certificates]=await Promise.all([
@@ -150,10 +158,19 @@ Deno.serve(async(req)=>{
    case "project1":{
     const evaluation=evaluatePlate(body.shapes);
     if(evaluation.pass){
-      const history=await database("project_submissions","?user_id=eq."+encodeURIComponent(user.id)+"&project_id=eq.1&status=eq.approved&select=id&limit=1");
-      if(!history.length)await database("project_submissions","","POST",{user_id:user.id,project_id:1,status:"approved",score:100,submitted_notes:"Server-validated precision mounting plate · "+ASSESSMENT_VERSION,evidence_paths:[]});
+      const evidence=await geometryEvidence(body.shapes);
+      // A prior legacy approval contains no drawing. Always store a new record
+      // when its exact snapshot has not already been recorded for this account.
+      const history=await database("project_submissions","?user_id=eq."+encodeURIComponent(user.id)+"&project_id=eq.1&status=eq.approved&select=id,submitted_notes&order=submitted_at.desc&limit=100");
+      let record=history.find(item=>item.submitted_notes===evidence);
+      if(!record){
+       const rows=await database("project_submissions","","POST",{user_id:user.id,project_id:1,status:"approved",score:100,submitted_notes:evidence,evidence_paths:[]});
+       record=rows?.[0];
+      }
+      if(!record?.id)throw Error("Geometry evidence was not saved");
+      return response(req,{...evaluation,verified:true,submissionId:record.id,evidenceSaved:true});
     }
-    return response(req,{...evaluation,verified:true});
+    return response(req,{...evaluation,verified:true,evidenceSaved:false});
    }
    case "review_queue":case "review":return await projectReview(req,user,body);
    case "review_file":return await signedReviewEvidence(req,user,body);

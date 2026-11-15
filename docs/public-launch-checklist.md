@@ -33,7 +33,7 @@ Verify:
 - sign-out removes account session from that device.
 
 ## 3. Reviewer activation
-**Current live state:** no student accounts are registered yet and no reviewer has been granted access. Do not insert an arbitrary or unverified email.
+**Current live state (November 15, 2026):** one confirmed account exists, but it has not been identified as the owner’s selected reviewer. No reviewer has been granted access. Do not insert an arbitrary or unverified email.
 
 1. Register your actual owner account at [CAD to Career](https://cad-to-career.vercel.app/#/register), after SMTP and URL redirects are working.
 2. Open the verification email and confirm the account.
@@ -52,13 +52,13 @@ Verify:
 - Test on Android phones, desktop browsers and offline-to-online transitions.
 - Complete legal operator contact, retention/deletion policy and storage malware screening before wide distribution.
 
-## 5. Production-readiness status (November 13, 2026)
+## 5. Production-readiness status (updated November 15, 2026)
 
 - **Completed:** Backend migrations, least-privilege table grants, database ownership checks for two simulated users, reviewer authorization and atomic decision tests. Test data was rolled back.
 - **Completed:** Vercel Git deployment, cloud authentication UI, student drafts, private submission and reviewer UI code, server grader and read-only certificate verification endpoint.
 - **Incomplete:** Supabase project Site URL/redirect allowlist has not been read or configured through a privileged token. The current connected tools do not expose those Auth settings.
 - **Incomplete:** SMTP host, verified sender domain and email credential have not been supplied or configured, so public email verification/password resets are not live for arbitrary users.
-- **Incomplete:** Owner account has not been created and email-verified, so reviewer admin membership cannot be safely granted yet.
+- **Incomplete:** The owner has not identified which confirmed CAD to Career account should be granted reviewer access; no reviewer is currently assigned.
 - **Incomplete:** Real-device onboarding, public-domain email delivery, role-access QA from actual accounts and storage malware scanning.
 
 **Do not announce unrestricted public registration or verified certificates as fully tested until these prerequisites are satisfied.**
