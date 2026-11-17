@@ -25,8 +25,10 @@
 ## Live Supabase project
 - Project: `kcerxxauczxydmexcdly` (us-west-1)
 - Publishable key is in public `cloud-config.js`, as intended. **Never** commit service-role keys.
-- Applied migrations: `0001_initial.sql`, `0002_student_cloud_workspaces.sql`, `0003_reviewer_assessment.sql`
-- Edge Functions: `cad-assess` (JWT required) and `cad-verify` (public read-only)
+- Applied migrations: `0001`–`0005`, verified portfolio tables, portfolio request quotas, and `20261117030238_freeze_submission_evidence.sql`.
+- Edge Functions: `cad-assess` v7 (JWT required), `cad-verify` v1 (public read-only), and `cad-portfolio` v2 (public opted-in reads; authenticated owner writes).
+- Live backend checked November 16, 2026: submitted evidence directories are frozen; reviewer file signing validates the exact owner/submission path; assessment JSON is limited to 16 KiB. No existing learner submissions or evidence objects were present when the storage rules were tightened.
+- Portfolio frontend changes remain in PR #16; backend deployment does not mean the frontend is published.
 - RLS test using two synthetic users was successful; test transaction rolled back.
 
 ## Still needs live verification / setup before broad enrollment
@@ -57,8 +59,11 @@ Open http://localhost:8000. For local authentication, add `http://localhost:8000
 node --check app.js
 node --check cloud.js
 node --check data.js
+node --check portfolio-ui.js
+npm ci --prefix tests/db --ignore-scripts
+node scripts/build-public.mjs
 node tests/smoke.cjs
-node --test tests/geometry-feedback.cjs
+node --test tests/*.cjs tests/*.test.mjs tests/db/*.test.cjs
 ```
 The GitHub Actions workflow runs the checks. Tests do **not** substitute for a verified student login and live cross-device exercise.
 
@@ -74,3 +79,9 @@ Repository remains private with no declared open-source license. Course content 
 The opt-in portfolio flow and verification limits are documented in
 [docs/VERIFIED_PORTFOLIOS.md](docs/VERIFIED_PORTFOLIOS.md). Real-account and
 reviewer testing remains a release requirement.
+
+Supabase's security advisor still reports leaked-password protection disabled.
+Its [documentation](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)
+requires Pro or above; no plan upgrade was made. The RLS-without-policy notices
+on service-only portfolio and reviewer tables are intentional default-deny
+access, not a reason to grant browser access.

@@ -11,6 +11,22 @@ function cors(req){
 }
 function response(req,data,status=200){return new Response(JSON.stringify(data),{status,headers:cors(req)})}
 function uid(value){return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value||"")}
+function validEvidencePath(path,userId,submissionId){
+ if(typeof path!=="string"||path.length>500||!uid(userId)||!uid(submissionId))return false;
+ const parts=path.split("/");
+ return parts.length===3&&parts[0]===userId&&parts[1]===submissionId&&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-[a-z0-9._-]{1,100}$/i.test(parts[2]);
+}
+async function requestBody(req){
+ if(Number(req.headers.get("content-length")||0)>16384)throw Error("Request too large");
+ if(!req.body)throw Error("Invalid request body");
+ const reader=req.body.getReader();let size=0;const chunks=[];
+ while(true){const {value,done}=await reader.read();if(done)break;size+=value.length;
+  if(size>16384){await reader.cancel();throw Error("Request too large")}chunks.push(value);
+ }
+ const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length}
+ try{return JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(bytes))}catch(_){throw Error("Invalid request body")}
+}
 async function database(table,query="",method="GET",body,preference="return=representation"){
  const headers={"apikey":SERVICE,"Authorization":"Bearer "+SERVICE,"Content-Type":"application/json"};
  if(method!=="GET")headers["Prefer"]=preference;
@@ -95,7 +111,7 @@ async function signedReviewEvidence(req,user,body){
  if(!uid(id)||path.length>500)return response(req,{error:"Invalid file request"},400);
  const entries=await database("project_submissions","?id=eq."+id+"&select=id,user_id,evidence_paths");
  const submission=entries?.[0];
- if(!submission||!Array.isArray(submission.evidence_paths)||!submission.evidence_paths.includes(path)||!path.startsWith(submission.user_id+"/"))
+ if(!submission||!Array.isArray(submission.evidence_paths)||!submission.evidence_paths.includes(path)||!validEvidencePath(path,submission.user_id,submission.id))
    return response(req,{error:"File does not belong to this submission"},403);
  const signed=await fetch(BASE+"/storage/v1/object/sign/cad-submissions/"+path.split("/").map(encodeURIComponent).join("/"),{
   method:"POST",headers:{"apikey":SERVICE,"Authorization":"Bearer "+SERVICE,"Content-Type":"application/json"},
@@ -134,8 +150,8 @@ Deno.serve(async(req)=>{
  if(!BASE||!SERVICE)return response(req,{error:"Assessment service unavailable"},503);
  try{
   const user=await authenticatedUser(req);
-  const body=await req.json();
-  if(!body||typeof body!=="object")return response(req,{error:"Invalid request"},400);
+  const body=await requestBody(req);
+  if(!body||typeof body!=="object"||Array.isArray(body))return response(req,{error:"Invalid request"},400);
   switch(String(body.action||"")){
    case "status":return response(req,{status:await projectStatus(user.id),reviewer:await reviewerRole(user.id)});
    case "quiz":{
@@ -179,6 +195,8 @@ Deno.serve(async(req)=>{
   }
  }catch(error){
   const msg=String(error?.message||"");
+  if(msg==="Request too large")return response(req,{error:"Assessment requests must be 16 KB or less."},413);
+  if(msg==="Invalid request body")return response(req,{error:"Invalid request body."},400);
   if(/session|Sign in required|Invalid account/.test(msg))return response(req,{error:"Please sign in again."},401);
   console.error("Assessment error",msg);
   return response(req,{error:"Assessment could not be completed. Try again."},500);

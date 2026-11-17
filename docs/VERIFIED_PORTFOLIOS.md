@@ -20,6 +20,13 @@ labelled as such; it is not an assessment or proof of authorship.
   limits images to 5 MiB, checks publication and review status on each request,
   and serves a `no-store` response. Shared images may contain metadata. Source CAD
   files, submitted notes, email addresses and reviewer feedback are not exposed.
+- Submission paths must match the owner, submission ID and generated filename.
+  The database requires 2–8 distinct existing uploads for Projects 2–5. It blocks
+  new uploads into submitted directories and prevents deletion during review or
+  after approval. Rejected or returned files may be removed; revisions use a new
+  submission. The reviewer signing endpoint also validates paths independently
+  before any privileged Storage request. Service-role administrative operations
+  remain trusted and must preserve this evidence chain.
 - Disabling the page, unpublishing a case study, or replacing the link stops new
   public access; it cannot recall copies already saved by a visitor.
 
@@ -32,12 +39,14 @@ Deploy it with JWT gateway verification disabled because public portfolio GETs
 are intentionally anonymous; the handler independently verifies the user token
 and ownership for every POST. Never put a service key in frontend code.
 
-Run `node tests/smoke.cjs`, `node tests/cloud-sync.cjs`, and
-`node --test tests/geometry-feedback.cjs tests/portfolio.test.mjs`. Test account
+Run `npm ci --prefix tests/db --ignore-scripts`, `node tests/smoke.cjs`,
+`node tests/cloud-sync.cjs`, and
+`node --test tests/geometry-feedback.cjs tests/assessment-security.cjs tests/portfolio.test.mjs tests/db/*.test.cjs`. Test account
 creation, review submission, approval, publication, image opt-in, unpublishing,
 link replacement and cross-account isolation in a non-production environment
-before a public release. The automated tests use synthetic data and mocked
-services; they do not establish that a real learner can register or receive a
+before a public release. The automated tests use synthetic data, mocked HTTP
+services and PostgreSQL-compatible database policy/transaction tests; they do not
+establish that a real learner can register or receive a
 review in production. Public registration still depends on the separate SMTP and
 redirect setup in the launch checklist. Reviewers must be provisioned separately.
 
@@ -47,3 +56,7 @@ throttling in function logs and rejects oversized request bodies. The public
 ceiling is shared: a surge can temporarily affect all visitors, and a database
 counter is not a substitute for an independent edge-level DDoS/WAF service.
 Configure rate-limit alerts and network-edge protections before wide release.
+
+Assessment requests are limited to 16 KiB before JSON parsing. Malformed bodies
+return 400; oversized bodies return 413. The endpoint still validates the user
+session before processing an action.

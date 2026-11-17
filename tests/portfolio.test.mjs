@@ -117,7 +117,7 @@ test('a server-checked plate saves a digest and exact geometry without learner m
   }
   throw Error('unexpected call');
  };
- vm.runInNewContext(readFileSync('supabase/functions/cad-assess/index.ts','utf8'),{Deno:{env:{get:()=> 'test'},serve:fn=>handler=fn},Response,fetch:fetcher,crypto:webcrypto,TextEncoder,Uint8Array,console});
+ vm.runInNewContext(readFileSync('supabase/functions/cad-assess/index.ts','utf8'),{Deno:{env:{get:()=> 'test'},serve:fn=>handler=fn},Response,fetch:fetcher,crypto:webcrypto,TextEncoder,TextDecoder,Uint8Array,console});
  const shapes=[{type:'rect',x:0,y:0,w:120,h:70,privateNote:'do not save'},...[{x:15,y:15},{x:105,y:15},{x:15,y:55},{x:105,y:55}].map(p=>({type:'circle',...p,d:8,id:'local-id'}))];
  const request=()=>new Request('https://test.invalid',{method:'POST',headers:{authorization:'Bearer learner','content-type':'application/json'},body:JSON.stringify({action:'project1',shapes})});
  const result=await (await handler(request())).json();

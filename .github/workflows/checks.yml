@@ -36,7 +36,7 @@ jobs:
           node --test tests/curriculum-integrity.cjs
           node --test tests/csp-compatibility.cjs
           node --test tests/expanded-curriculum.cjs
-          node --test tests/geometry-feedback.cjs tests/portfolio.test.mjs tests/db/portfolio-quota.test.cjs tests/db/reviewer-transaction.test.cjs
+          node --test tests/geometry-feedback.cjs tests/assessment-security.cjs tests/portfolio.test.mjs tests/db/portfolio-quota.test.cjs tests/db/reviewer-transaction.test.cjs tests/db/evidence-integrity.test.cjs
           node tests/cloud-sync.cjs
 
 

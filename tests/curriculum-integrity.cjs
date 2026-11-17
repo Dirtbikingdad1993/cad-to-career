@@ -37,7 +37,7 @@ test('the assessment HTTP handler grades corrected answers and rejects the old w
   const writes = [];
   const studentId = '11111111-1111-4111-8111-111111111111';
   const sandbox = {
-    URL, Request, Response, Headers, console,
+    URL, Request, Response, Headers, TextDecoder, console,
     Deno: {
       env: { get: name => name === 'SUPABASE_URL' ? 'https://test.supabase.co' : name === 'SUPABASE_SERVICE_ROLE_KEY' ? 'test-key' : '' },
       serve: fn => { handler = fn; },
