@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # Legacy Base44 import is not part of the independent Vercel app, but its
+  # dependencies should still be monitored while the source is retained.
+  - package-ecosystem: npm
+    directory: /apps/base44-site
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      safe-minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
