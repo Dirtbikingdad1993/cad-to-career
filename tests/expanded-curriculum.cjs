@@ -103,7 +103,7 @@ test('additional lessons do not call certificate assessment services', () => {
   const lesson = lessons.find(l => l.id === 53);
   const form = { id: 'quizForm', getAttribute: () => '53', answers: lesson.quiz.map(q => q.answer) };
   listeners.submit.forEach(fn => fn({ target: form, preventDefault() {} }));
-  const button = { id: 'completeLesson', getAttribute: name => name === 'data-lesson' ? '53' : null };
+  const button = { id: 'completeLesson', getAttribute: name => name === 'data-lesson' ? '53' : null, hasAttribute: () => false };
   listeners.click.forEach(fn => fn({ target: { closest: () => button } }));
   assert.equal(calls.quiz.length, 0);
   assert.equal(calls.exercise.length, 0);
