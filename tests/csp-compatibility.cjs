@@ -9,7 +9,7 @@ test('public pages do not rely on styles blocked by the production CSP', () => {
   assert.ok(csp, 'production CSP must exist');
   const styleSources = csp.split(';').map(part => part.trim()).find(part => part.startsWith('style-src '));
   assert.ok(styleSources && !styleSources.includes("'unsafe-inline'"), 'inline styles must stay disabled');
-  for (const file of ['index.html', 'app.js', 'expanded-curriculum.js', 'verify.html', 'privacy.html', 'terms.html', 'pilot/index.html', 'resources/technical-references.html']) {
+  for (const file of ['index.html', 'app.js', 'portfolio-ui.js', 'expanded-curriculum.js', 'verify.html', 'privacy.html', 'terms.html', 'pilot/index.html', 'resources/technical-references.html']) {
     const source = fs.readFileSync(file, 'utf8');
     assert.doesNotMatch(source, /<style(?:\s|>)/i, `${file} contains a blocked inline stylesheet`);
     assert.doesNotMatch(source, /\sstyle\s*=\s*["']/i, `${file} contains a blocked style attribute`);
