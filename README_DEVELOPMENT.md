@@ -2,7 +2,7 @@
 
 ## Current stack
 - Static HTML/CSS/JavaScript learning app (no runtime npm dependencies)
-- Private GitHub repository: Dirtbikingdad1993/cad-to-career
+- **Public** GitHub repository: Dirtbikingdad1993/cad-to-career (never commit secrets or private exam keys)
 - Vercel production: https://cad-to-career.vercel.app/
 - Supabase Auth, PostgreSQL, private Storage and JWT-authenticated Edge Functions
 - Responsive Android PWA with offline lesson files and on-device draft cache
@@ -14,7 +14,7 @@
 - Email/password account registration, login, logout, recovery and password updates
 - Private cloud workspace per authenticated user; automatic save after edits, restore on login
 - Guest-to-account import and account-to-account isolation
-- Official server-side quiz scoring, exercise confirmations and Project 1 geometry checks
+- Official server-side quiz scoring with **60 different server-held official questions**, a 5-attempt/24h limit and `foundations-v2-private` credit, plus exercise confirmations and Project 1 geometry checks. The 159 publicly visible questions remain local **practice only**.
 - The existing certificate uses only the original 20 core lessons. Additional lesson quizzes and confirmations are practice records and do not create official assessment entries or change credential eligibility.
 - Private evidence uploads for Projects 2–5 and Needs Review status
 - Reviewer-only queue, private short-lived evidence links, verdicts, rubric scores and feedback
@@ -25,11 +25,13 @@
 ## Live Supabase project
 - Project: `kcerxxauczxydmexcdly` (us-west-1)
 - Publishable key is in public `cloud-config.js`, as intended. **Never** commit service-role keys.
-- Applied migrations: `0001_initial.sql`, `0002_student_cloud_workspaces.sql`, `0003_reviewer_assessment.sql`
+- Applied migrations include the initial schema, secure cloud workspaces, reviewer integrity, least-privilege student grants, atomic reviewer decisions, opt-in portfolio drafts, and `20261117103000_private_official_quiz.sql` / `20261117104500_service_private_quiz_usage.sql`.
 - Edge Functions: `cad-assess` (JWT required) and `cad-verify` (public read-only)
-- RLS test using two synthetic users was successful; test transaction rolled back.
+- RLS and private quiz tests using synthetic users passed. Tested correct and incorrect answers, rate limits, and service-only bank access; all synthetic records were rolled back.
 
 ## Still needs live verification / setup before broad enrollment
+
+**November 17, 2026:** GitHub CI passed and the Vercel production build for `2f1b461` was READY. Public signup email/SMTP and redirect URL configuration remain unverified. A domain purchase is only quoted, not approved or completed. Supabase's leaked-password protection reports a warning on the Free tier; do not upgrade the plan without explicit consent.
 1. **Supabase Auth URL configuration:** Set Site URL to `https://cad-to-career.vercel.app` and allow redirect URLs including `https://cad-to-career.vercel.app/**` in Supabase Dashboard → Authentication → URL Configuration. This setting cannot be changed with the current connected action set and is not verified.
 2. **Real registration QA:** Confirm email verification link, password reset, logout, new-device sign-in and a saved CAD drawing using two test devices.
 3. **Reviewer identity:** Sign in as the designated reviewer, then have an administrator assign that user's UUID in `public.reviewer_memberships`. The reviewer role is never granted through public self-service. Test project approval and certificate issuance end-to-end.
