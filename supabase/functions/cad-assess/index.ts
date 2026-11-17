@@ -2,8 +2,7 @@
 // Service key stays only in Supabase Edge Function environment.
 const BASE=Deno.env.get("SUPABASE_URL")||"";
 const SERVICE=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
-const QUIZ_KEYS=["ABC","ABC","CAB","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","ABC","AAC","ABC","AAC","ABC","AAC","ABC","AAC"];
-const ASSESSMENT_VERSION="foundations-v1";
+const ASSESSMENT_VERSION="foundations-v2-private";
 function cors(req){
  const origin=req.headers.get("origin")||"";
  const allowed=origin==="https://cad-to-career.vercel.app"||/^https:\/\/cad-to-career-[a-z0-9-]+\.vercel\.app$/.test(origin)||/^http:\/\/localhost:\d+$/.test(origin);
@@ -11,6 +10,22 @@ function cors(req){
 }
 function response(req,data,status=200){return new Response(JSON.stringify(data),{status,headers:cors(req)})}
 function uid(value){return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value||"")}
+function validEvidencePath(path,userId,submissionId){
+ if(typeof path!=="string"||path.length>500||!uid(userId)||!uid(submissionId))return false;
+ const parts=path.split("/");
+ return parts.length===3&&parts[0]===userId&&parts[1]===submissionId&&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-[a-z0-9._-]{1,100}$/i.test(parts[2]);
+}
+async function requestBody(req){
+ if(Number(req.headers.get("content-length")||0)>16384)throw Error("Request too large");
+ if(!req.body)throw Error("Invalid request body");
+ const reader=req.body.getReader();let size=0;const chunks=[];
+ while(true){const {value,done}=await reader.read();if(done)break;size+=value.length;
+  if(size>16384){await reader.cancel();throw Error("Request too large")}chunks.push(value);
+ }
+ const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length}
+ try{return JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(bytes))}catch(_){throw Error("Invalid request body")}
+}
 async function database(table,query="",method="GET",body,preference="return=representation"){
  const headers={"apikey":SERVICE,"Authorization":"Bearer "+SERVICE,"Content-Type":"application/json"};
  if(method!=="GET")headers["Prefer"]=preference;
@@ -44,6 +59,14 @@ function evaluatePlate(shapes){
   else{used.add(j);score+=20}
  }
  return {score,pass:score===100,feedback:lines};
+}
+// Store only measured geometry, never learner-supplied IDs or arbitrary metadata.
+async function geometryEvidence(shapes){
+ const sanitized=shapes.map(s=>s.type==="rect"?{type:"rect",x:s.x,y:s.y,w:s.w,h:s.h}:{type:"circle",x:s.x,y:s.y,d:s.d});
+ const snapshot=JSON.stringify({format:"cad-plate-v1",units:"mm",shapes:sanitized});
+ const bytes=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(snapshot));
+ const sha256=Array.from(new Uint8Array(bytes),x=>x.toString(16).padStart(2,"0")).join("");
+ return JSON.stringify({kind:"geometry-evidence-v1",validator:ASSESSMENT_VERSION,snapshot,sha256});
 }
 async function projectStatus(userId){
  const id=encodeURIComponent(userId);
@@ -87,7 +110,7 @@ async function signedReviewEvidence(req,user,body){
  if(!uid(id)||path.length>500)return response(req,{error:"Invalid file request"},400);
  const entries=await database("project_submissions","?id=eq."+id+"&select=id,user_id,evidence_paths");
  const submission=entries?.[0];
- if(!submission||!Array.isArray(submission.evidence_paths)||!submission.evidence_paths.includes(path)||!path.startsWith(submission.user_id+"/"))
+ if(!submission||!Array.isArray(submission.evidence_paths)||!submission.evidence_paths.includes(path)||!validEvidencePath(path,submission.user_id,submission.id))
    return response(req,{error:"File does not belong to this submission"},403);
  const signed=await fetch(BASE+"/storage/v1/object/sign/cad-submissions/"+path.split("/").map(encodeURIComponent).join("/"),{
   method:"POST",headers:{"apikey":SERVICE,"Authorization":"Bearer "+SERVICE,"Content-Type":"application/json"},
@@ -126,21 +149,43 @@ Deno.serve(async(req)=>{
  if(!BASE||!SERVICE)return response(req,{error:"Assessment service unavailable"},503);
  try{
   const user=await authenticatedUser(req);
-  const body=await req.json();
-  if(!body||typeof body!=="object")return response(req,{error:"Invalid request"},400);
+  const body=await requestBody(req);
+  if(!body||typeof body!=="object"||Array.isArray(body))return response(req,{error:"Invalid request"},400);
   switch(String(body.action||"")){
    case "status":return response(req,{status:await projectStatus(user.id),reviewer:await reviewerRole(user.id)});
-   case "quiz":{
-    const lessonId=Number(body.lessonId),answers=body.answers;
-    if(!Number.isInteger(lessonId)||lessonId<1||lessonId>20||!Array.isArray(answers)||answers.length!==3||answers.some(x=>!["A","B","C"].includes(x)))
-      return response(req,{error:"Invalid quiz attempt"},400);
-    const expected=QUIZ_KEYS[lessonId-1],correct=answers.filter((x,i)=>x===expected[i]).length;
-    const score=Math.round(correct/3*100),passed=score>=80;
-    await database("quiz_results","?on_conflict=user_id,lesson_id,assessment_version","POST",
-     {user_id:user.id,lesson_id:lessonId,assessment_version:ASSESSMENT_VERSION,score,passed,taken_at:new Date().toISOString()},
-     "resolution=merge-duplicates,return=representation");
-    return response(req,{score,passed,verified:true});
+   case "quiz_questions":{
+    const lessonId=Number(body.lessonId);
+    if(!Number.isInteger(lessonId)||lessonId<1||lessonId>20)
+      return response(req,{error:"Invalid lesson"},400);
+    const questions=await database("rpc/cad_list_private_quiz","","POST",{p_lesson_id:lessonId});
+    if(!Array.isArray(questions)||questions.length!==3||questions.some(q=>q.correct_index!==undefined||q.answer!==undefined))
+      return response(req,{error:"Official questions unavailable"},503);
+    return response(req,{lessonId,assessmentVersion:ASSESSMENT_VERSION,questions});
    }
+   case "quiz_submit":{
+    const lessonId=Number(body.lessonId),responses=body.responses;
+    if(!Number.isInteger(lessonId)||lessonId<1||lessonId>20||!Array.isArray(responses)||responses.length!==3)
+      return response(req,{error:"Invalid quiz attempt"},400);
+    if(responses.some(r=>!r||typeof r.key!=="string"||!/^L(0[1-9]|1[0-9]|20)-Q[1-3]$/.test(r.key)||
+        !Number.isInteger(r.choice)||r.choice<0||r.choice>2))
+      return response(req,{error:"Invalid answer format"},400);
+    const r=await fetch(BASE+"/rest/v1/rpc/cad_grade_private_quiz",{
+      method:"POST",headers:{"apikey":SERVICE,"Authorization":"Bearer "+SERVICE,"Content-Type":"application/json"},
+      body:JSON.stringify({p_user_id:user.id,p_lesson_id:lessonId,p_responses:responses})
+    });
+    const raw=await r.text();let result;
+    try{result=raw?JSON.parse(raw):null}catch(_){result=null}
+    if(!r.ok){
+      const code=String(result?.code||"");
+      if(code==="P0001")return response(req,{error:"Five official quiz attempts are allowed per lesson within 24 hours. Try again later."},429);
+      if(code==="22023")return response(req,{error:"Quiz submission is invalid or outdated. Reload the lesson and try again."},400);
+      console.error("Private quiz grading failed",r.status,code);
+      return response(req,{error:"Official assessment unavailable"},503);
+    }
+    return response(req,{score:result.score,passed:result.passed,verified:true,
+      remainingToday:result.remainingToday});
+   }
+   case "quiz":return response(req,{error:"This legacy practice quiz is not an official assessment. Open the separate official quiz."},410);
    case "exercise":{
     const lessonId=Number(body.lessonId);
     if(!Number.isInteger(lessonId)||lessonId<1||lessonId>20)return response(req,{error:"Invalid lesson"},400);
@@ -150,10 +195,19 @@ Deno.serve(async(req)=>{
    case "project1":{
     const evaluation=evaluatePlate(body.shapes);
     if(evaluation.pass){
-      const history=await database("project_submissions","?user_id=eq."+encodeURIComponent(user.id)+"&project_id=eq.1&status=eq.approved&select=id&limit=1");
-      if(!history.length)await database("project_submissions","","POST",{user_id:user.id,project_id:1,status:"approved",score:100,submitted_notes:"Server-validated precision mounting plate · "+ASSESSMENT_VERSION,evidence_paths:[]});
+      const evidence=await geometryEvidence(body.shapes);
+      // A prior legacy approval contains no drawing. Always store a new record
+      // when its exact snapshot has not already been recorded for this account.
+      const history=await database("project_submissions","?user_id=eq."+encodeURIComponent(user.id)+"&project_id=eq.1&status=eq.approved&select=id,submitted_notes&order=submitted_at.desc&limit=100");
+      let record=history.find(item=>item.submitted_notes===evidence);
+      if(!record){
+       const rows=await database("project_submissions","","POST",{user_id:user.id,project_id:1,status:"approved",score:100,submitted_notes:evidence,evidence_paths:[]});
+       record=rows?.[0];
+      }
+      if(!record?.id)throw Error("Geometry evidence was not saved");
+      return response(req,{...evaluation,verified:true,submissionId:record.id,evidenceSaved:true});
     }
-    return response(req,{...evaluation,verified:true});
+    return response(req,{...evaluation,verified:true,evidenceSaved:false});
    }
    case "review_queue":case "review":return await projectReview(req,user,body);
    case "review_file":return await signedReviewEvidence(req,user,body);
@@ -162,6 +216,8 @@ Deno.serve(async(req)=>{
   }
  }catch(error){
   const msg=String(error?.message||"");
+  if(msg==="Request too large")return response(req,{error:"Assessment requests must be 16 KB or less."},413);
+  if(msg==="Invalid request body")return response(req,{error:"Invalid request body."},400);
   if(/session|Sign in required|Invalid account/.test(msg))return response(req,{error:"Please sign in again."},401);
   console.error("Assessment error",msg);
   return response(req,{error:"Assessment could not be completed. Try again."},500);
