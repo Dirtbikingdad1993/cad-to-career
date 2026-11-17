@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path';
 const files = [
   'index.html', 'app.js', 'data.js', 'expanded-curriculum.js', 'lesson-guides.js', 'cloud-config.js', 'cloud.js',
   'styles.css', 'icon.svg', 'manifest.webmanifest', 'sw.js', 'robots.txt',
+  'courses.html', 'cad-units.html', 'cad-dimensioning.html', 'cad-parametric-sketches.html', 'sitemap.xml',
   'privacy.html', 'terms.html', 'verify.html', 'verify.js', 'verify.css',
   'resources/phone-to-desktop-roadmap.md',
   'resources/technical-references.html',

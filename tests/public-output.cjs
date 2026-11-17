@@ -41,3 +41,16 @@ test('changes to public files trigger builds while unrelated app changes are ski
     assert.equal(spawnSync('sh', ['-c', config.ignoreCommand], { cwd: dir }).status, 0);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
+
+
+test('public output preserves crawlable course pages and search verification', () => {
+  const fs = require('node:fs');
+  for (const file of ['courses.html', 'cad-units.html', 'cad-dimensioning.html', 'cad-parametric-sketches.html', 'sitemap.xml']) {
+    assert.ok(existsSync(join('vercel-output', file)), `missing search asset ${file}`);
+  }
+  const home = fs.readFileSync(join('vercel-output', 'index.html'), 'utf8');
+  assert.match(home, /name="google-site-verification"/);
+  assert.match(home, /rel="canonical"/);
+  assert.match(fs.readFileSync(join('vercel-output', 'robots.txt'), 'utf8'), /Sitemap: https:\/\/cad-to-career\.vercel\.app\/sitemap\.xml/);
+  assert.match(fs.readFileSync(join('vercel-output', 'sitemap.xml'), 'utf8'), /https:\/\/cad-to-career\.vercel\.app\/courses/);
+});
