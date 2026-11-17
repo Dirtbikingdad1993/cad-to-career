@@ -1,3 +1,20 @@
+# Current application status (November 17, 2026)
+
+**CAD to Career is an independently deployed, free, Android-first CAD learning application.** The current implementation contains **53 lessons** (20 core certification-track lessons and 33 additional practice lessons), five evidence-based portfolio projects, a measured-geometry lab, and Supabase-backed login and private cloud progress. Learners begin on Android and transition to desktop FreeCAD, LibreCAD, Blender or appropriately licensed Fusion.
+
+- **Application:** https://cad-to-career.vercel.app
+- **Architecture:** standalone HTML/CSS/JavaScript, Vercel, Supabase Auth/Postgres/Storage/Edge Functions; no build dependency on Base44 or Lovable for the production website.
+- **Assessment integrity:** 159 public *practice* questions are not official credit. A separate 60-question official bank remains in a private Supabase schema; signed-in learners use server-grade exams and approved projects for platform-issued credentials, not professional accreditation.
+- **Latest checked production:** GitHub validation passed; Vercel production deployment READY for commit `2f1b461`.
+- **Not fully launched:** General-purpose confirmation email delivery, authentication redirects, real-device cross-device QA, designated reviewer onboarding, legal operator information, and evidence upload scanning still require validation. Do not claim unrestricted registration or verified employment outcomes.
+- **Repo visibility:** public. Never commit passwords, service-role tokens, assessment answer keys or student design files.
+
+See [development status](README_DEVELOPMENT.md) and [launch checklist](docs/public-launch-checklist.md) for current operational requirements.
+
+---
+
+## Original project vision and roadmap (historical)
+
 CAD to Career
 
 Learn CAD for Free. Prove What You Can Design. Build Your Future.
