@@ -129,3 +129,10 @@ test('every lesson page renders its own example, guided steps, and assessment', 
     assert.match(nodes.root.innerHTML, /id="completeLesson"/);
   }
 });
+
+
+test('the final lesson does not claim course completion without confirmation', () => {
+  const { nodes } = setup('#/learn/lesson-53');
+  assert.match(nodes.root.innerHTML, /BACK TO COURSE/);
+  assert.doesNotMatch(nodes.root.innerHTML, /COURSE COMPLETE/);
+});
