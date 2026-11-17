@@ -24,6 +24,7 @@ jobs:
           node --check app.js
           node --check cloud.js
           node --check data.js
+          node --check lesson-guides.js
       - name: Validate curriculum and application integrity
         run: |
           node scripts/build-public.mjs
@@ -32,6 +33,7 @@ jobs:
           node --test tests/curriculum-integrity.cjs
           node --test tests/csp-compatibility.cjs
           node --test tests/expanded-curriculum.cjs
+          node --test tests/lesson-guides.cjs
           node --test tests/geometry-feedback.cjs
           node tests/cloud-sync.cjs
 

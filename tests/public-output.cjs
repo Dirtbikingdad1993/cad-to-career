@@ -5,7 +5,7 @@ const { join } = require('node:path');
 
 test('public build contains learner assets but excludes repository and backend files', () => {
   const root = 'vercel-output';
-  for (const file of ['index.html', 'app.js', 'data.js', 'expanded-curriculum.js', 'styles.css', 'sw.js',
+  for (const file of ['index.html', 'app.js', 'data.js', 'expanded-curriculum.js', 'lesson-guides.js', 'styles.css', 'sw.js',
     'verify.html', 'verify.css', 'pilot/index.html', 'pilot/styles.css',
     'resources/project-1-brief.md', 'resources/technical-references.html']) {
     assert.ok(existsSync(join(root, file)), `missing public asset ${file}`);
@@ -28,7 +28,7 @@ test('changes to public files trigger builds while unrelated app changes are ski
     git('init', '-q');
     fs.writeFileSync(join(dir, 'index.html'), 'initial');
     commit('initial');
-    for (const path of ['expanded-curriculum.js', 'verify.css', 'scripts/build-public.mjs', 'pilot/index.html', 'resources/technical-references.html']) {
+    for (const path of ['expanded-curriculum.js', 'lesson-guides.js', 'verify.css', 'scripts/build-public.mjs', 'pilot/index.html', 'resources/technical-references.html']) {
       const target = join(dir, path);
       fs.mkdirSync(require('node:path').dirname(target), { recursive: true });
       fs.writeFileSync(target, 'changed');
@@ -40,4 +40,17 @@ test('changes to public files trigger builds while unrelated app changes are ski
     commit('unrelated app');
     assert.equal(spawnSync('sh', ['-c', config.ignoreCommand], { cwd: dir }).status, 0);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+
+test('public output preserves crawlable course pages and search verification', () => {
+  const fs = require('node:fs');
+  for (const file of ['courses.html', 'cad-units.html', 'cad-dimensioning.html', 'cad-parametric-sketches.html', 'sitemap.xml']) {
+    assert.ok(existsSync(join('vercel-output', file)), `missing search asset ${file}`);
+  }
+  const home = fs.readFileSync(join('vercel-output', 'index.html'), 'utf8');
+  assert.match(home, /name="google-site-verification"/);
+  assert.match(home, /rel="canonical"/);
+  assert.match(fs.readFileSync(join('vercel-output', 'robots.txt'), 'utf8'), /Sitemap: https:\/\/cad-to-career\.vercel\.app\/sitemap\.xml/);
+  assert.match(fs.readFileSync(join('vercel-output', 'sitemap.xml'), 'utf8'), /https:\/\/cad-to-career\.vercel\.app\/courses/);
 });
