@@ -6,13 +6,14 @@ const vm = require('node:vm');
 function setup(hash = '#/courses', signedIn = false) {
   const listeners = {};
   const store = {};
-  const calls = { quiz: [], exercise: [] };
+  const calls = { quiz: [], exercise: [], questionFetch: [] };
   const nodes = {
     root: { innerHTML: '' },
     quizResult: { innerHTML: '', insertAdjacentHTML() {} },
     completeLesson: { disabled: true },
     exerciseConfirm: { checked: true },
     flash: { textContent: '' },
+    officialExamContainer: { innerHTML: '' },
   };
   const document = {
     getElementById: id => nodes[id] || null,
@@ -28,7 +29,12 @@ function setup(hash = '#/courses', signedIn = false) {
   const cloud = {
     currentUser: () => signedIn ? { id: 'test-user', email: 'test@example.invalid' } : null,
     init: () => Promise.resolve(),
-    gradeOfficialQuiz: (id, answers) => { calls.quiz.push({ id, answers }); return Promise.resolve({ score: 100, passed: true }); },
+    getOfficialQuestions: id => { calls.questionFetch.push(id); return Promise.resolve({questions:[
+      {key:'L01-Q1',question:'Official CAD lesson one concept question?',options:['A','B','C']},
+      {key:'L01-Q2',question:'Official CAD lesson two concept question?',options:['A','B','C']},
+      {key:'L01-Q3',question:'Official CAD lesson three concept question?',options:['A','B','C']}
+    ]}); },
+    gradeOfficialQuiz: (id, responses) => { calls.quiz.push({ id, responses }); return Promise.resolve({ score:100, passed:true, remainingToday:4 }); },
     confirmOfficialExercise: id => { calls.exercise.push(id); return Promise.resolve(); },
     getAssessmentStatus: () => Promise.resolve({}),
   };
@@ -96,9 +102,9 @@ test('additional lessons do not call certificate assessment services', () => {
   const { listeners, calls, store, lessons } = setup('#/learn/lesson-53', true);
   const lesson = lessons.find(l => l.id === 53);
   const form = { id: 'quizForm', getAttribute: () => '53', answers: lesson.quiz.map(q => q.answer) };
-  listeners.submit[0]({ target: form, preventDefault() {} });
+  listeners.submit.forEach(fn => fn({ target: form, preventDefault() {} }));
   const button = { id: 'completeLesson', getAttribute: name => name === 'data-lesson' ? '53' : null };
-  listeners.click[0]({ target: { closest: () => button } });
+  listeners.click.forEach(fn => fn({ target: { closest: () => button } }));
   assert.equal(calls.quiz.length, 0);
   assert.equal(calls.exercise.length, 0);
   const saved = JSON.parse(store['cad-to-career-local-v1']);
@@ -106,15 +112,15 @@ test('additional lessons do not call certificate assessment services', () => {
   assert.equal(saved.quizzes['53'].passed, true);
 });
 
-test('the original core quiz still calls the official assessment service when signed in', () => {
+test('signed-in core practice does not automatically award official credit', () => {
   const { listeners, calls, lessons } = setup('#/learn/lesson-1', true);
   const lesson = lessons.find(l => l.id === 1);
   const form = { id: 'quizForm', getAttribute: () => '1', answers: lesson.quiz.map(q => q.answer) };
-  listeners.submit[0]({ target: form, preventDefault() {} });
-  assert.equal(calls.quiz.length, 1);
-  assert.equal(calls.quiz[0].id, 1);
+  listeners.submit.forEach(fn=>fn({target:form,preventDefault(){}}));
+  assert.equal(calls.questionFetch.length,1);
+  assert.equal(calls.questionFetch[0],1);
+  assert.equal(calls.quiz.length,0,'local practice answers must not be submitted for official credit');
 });
-
 
 test('every lesson page renders its own example, guided steps, and assessment', () => {
   for (let id = 1; id <= 53; id++) {
