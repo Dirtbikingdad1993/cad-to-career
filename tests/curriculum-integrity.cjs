@@ -7,19 +7,75 @@ const curriculumContext = { window: {} };
 vm.runInNewContext(fs.readFileSync('data.js', 'utf8'), curriculumContext, { timeout: 2000 });
 const lessons = curriculumContext.window.CAD_CONTENT.lessons;
 const server = fs.readFileSync('supabase/functions/cad-assess/index.ts', 'utf8');
-const match = server.match(/const QUIZ_KEYS\s*=\s*(\[[^\]]+\])/);
-assert.ok(match, 'Server quiz keys must be present');
-const serverKeys = JSON.parse(match[1]);
+const app = fs.readFileSync('app.js', 'utf8');
+const migration = fs.readFileSync('supabase/migrations/20261117103000_private_official_quiz.sql', 'utf8');
 
-test('every lesson uses the same answer key in practice and verified grading', () => {
-  assert.equal(serverKeys.length, lessons.length);
-  for (const lesson of lessons) {
-    const localKey = lesson.quiz.map(question => question.answer).join('');
-    assert.equal(serverKeys[lesson.id - 1], localKey, `Lesson ${lesson.id} differs between graders`);
-  }
+test('practice answer keys never count as official verification', () => {
+  assert.equal(lessons.length, 20);
+  assert.ok(lessons.every(l => l.quiz.length === 3 && l.quiz.every(q => /^[ABC]$/.test(q.answer))));
+  assert.ok(app.includes('officialExamForm'), 'separate official form missing');
+  assert.ok(app.includes('getOfficialQuestions'), 'server-delivered official questions missing');
+  assert.ok(!app.includes('gradeOfficialQuiz(id,[fd.get("q0")'), 'practice answers must not be submitted as official');
+  assert.ok(!server.includes('QUIZ_KEYS'), 'public edge source must not contain official answer keys');
+  assert.ok(!server.includes('case "quiz":{'), 'legacy automatic passing path must not exist');
+  assert.match(server, /foundations-v2-private/);
+  assert.match(server, /rpc\/cad_grade_private_quiz/);
+  assert.match(migration, /revoke all on function public\.cad_grade_private_quiz/);
+  assert.match(migration, /to service_role/);
 });
 
-test('corrected CAD questions award the technically correct answers', () => {
+test('the official quiz endpoint returns question text and options but no answers', async () => {
+  let handler;
+  const studentId='11111111-1111-4111-8111-111111111111';
+  const items=[
+    {key:'L01-Q1',question:'An independent knowledge check about CAD and geometry?',options:['Choice A','Choice B','Choice C']},
+    {key:'L01-Q2',question:'An independent knowledge check about dimensional tolerance?',options:['Choice A','Choice B','Choice C']},
+    {key:'L01-Q3',question:'An independent knowledge check about design intent?',options:['Choice A','Choice B','Choice C']}
+  ];
+  const writes=[];
+  const sandbox = {
+    URL,Request,Response,Headers,TextDecoder,Uint8Array,console,
+    Deno:{
+      env:{get:name=> name==='SUPABASE_URL'?'https://test.supabase.co':name==='SUPABASE_SERVICE_ROLE_KEY'?'service-key':''},
+      serve:fn=>{handler=fn}
+    },
+    fetch:async (url,options={})=>{
+      if(String(url).endsWith('/auth/v1/user'))return Response.json({id:studentId,email_confirmed_at:'2026-01-01T00:00:00Z'});
+      if(String(url).includes('/rest/v1/rpc/cad_list_private_quiz'))return Response.json(items);
+      if(String(url).includes('/rest/v1/rpc/cad_grade_private_quiz')){
+        const payload=JSON.parse(options.body);writes.push(payload);
+        return Response.json({score:100,passed:true,verified:true,remainingToday:4});
+      }
+      throw Error('Unexpected request: '+String(url));
+    }
+  };
+  vm.runInNewContext(server,sandbox,{timeout:2500});
+  const call=async body=>{
+    const request=new Request('https://test.example/functions/v1/cad-assess',{
+      method:'POST',headers:{Authorization:'Bearer example-token','Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    const result=await handler(request);return {status:result.status,payload:await result.json()};
+  };
+  const questions=await call({action:'quiz_questions',lessonId:1});
+  assert.equal(questions.status,200);
+  assert.equal(questions.payload.questions.length,3);
+  assert.ok(questions.payload.questions.every(q=>!('answer' in q)&&!('correct_index' in q)));
+  assert.equal(questions.payload.assessmentVersion,'foundations-v2-private');
+  const legacy=await call({action:'quiz',lessonId:1,answers:['A','B','C']});
+  assert.equal(legacy.status,410,'old exposed practice answers must not issue official credit');
+  assert.equal(writes.length,0);
+  const responses=items.map((q,i)=>({key:q.key,choice:i}));
+  const graded=await call({action:'quiz_submit',lessonId:1,responses});
+  assert.equal(graded.status,200);assert.equal(graded.payload.passed,true);
+  assert.equal(writes.length,1);
+  assert.equal(writes[0].p_user_id,studentId);
+  assert.equal(writes[0].p_lesson_id,1);
+  assert.equal(writes[0].p_responses.length,3);
+  assert.ok(!JSON.stringify(questions.payload).includes('correct_index'));
+});
+
+test('guest practice still reports technically correct local answers', () => {
   const expected = new Map([
     [14, 'Controlling dimensions consistently'],
     [16, 'A neutral geometry format'],
@@ -27,43 +83,8 @@ test('corrected CAD questions award the technically correct answers', () => {
     [20, 'An authorized reviewer'],
   ]);
   for (const [id, answer] of expected) {
-    const question = lessons.find(lesson => lesson.id === id).quiz[1];
-    assert.equal(question.options['ABC'.indexOf(question.answer)], answer, `Lesson ${id}, question 2`);
-  }
-});
-
-test('the assessment HTTP handler grades corrected answers and rejects the old wrong answers', async () => {
-  let handler;
-  const writes = [];
-  const studentId = '11111111-1111-4111-8111-111111111111';
-  const sandbox = {
-    URL, Request, Response, Headers, console,
-    Deno: {
-      env: { get: name => name === 'SUPABASE_URL' ? 'https://test.supabase.co' : name === 'SUPABASE_SERVICE_ROLE_KEY' ? 'test-key' : '' },
-      serve: fn => { handler = fn; },
-    },
-    fetch: async (url, options = {}) => {
-      if (String(url).endsWith('/auth/v1/user')) return Response.json({ id: studentId, email_confirmed_at: '2026-01-01T00:00:00Z' });
-      if (String(url).includes('/rest/v1/quiz_results') && options.method === 'POST') {
-        writes.push(JSON.parse(options.body));
-        return Response.json([writes.at(-1)]);
-      }
-      throw new Error('Unexpected network request in assessment test');
-    },
-  };
-  vm.runInNewContext(server, sandbox, { timeout: 2000 });
-  for (const lessonId of [14, 16, 18, 20]) {
-    for (const [answers, expectedPass] of [[['A', 'A', 'C'], true], [['A', 'B', 'C'], false]]) {
-      const req = new Request('https://test.example/functions/v1/cad-assess', {
-        method: 'POST', headers: { Authorization: 'Bearer test-token', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'quiz', lessonId, answers }),
-      });
-      const response = await handler(req);
-      const result = await response.json();
-      assert.equal(response.status, 200);
-      assert.equal(result.passed, expectedPass, `Lesson ${lessonId}: ${answers.join('')}`);
-      assert.equal(writes.at(-1).user_id, studentId);
-    }
+    const question=lessons.find(l=>l.id===id).quiz[1];
+    assert.equal(question.options['ABC'.indexOf(question.answer)],answer);
   }
 });
 
