@@ -21,7 +21,7 @@ function headers(req){
  };
 }
 function respond(req,data,status=200){return new Response(JSON.stringify(data),{status,headers:headers(req)})}
-function err(req,message,status){return respond(req,{message},status)}
+function err(req,message,status,code="tutor_error"){return respond(req,{message,code},status)}
 function serviceHeaders(){
  if(SERVICE.startsWith("sb_secret_"))return {"apikey":SERVICE,"Content-Type":"application/json"};
  return {"apikey":SERVICE,"Authorization":"Bearer "+SERVICE,"Content-Type":"application/json"};
@@ -70,8 +70,8 @@ Deno.serve(async(req)=>{
  if(req.method!=="POST")return err(req,"Use POST for tutor questions",405);
  const origin=req.headers.get("origin")||"";
  if(!ORIGINS.has(origin))return err(req,"Unsupported site origin",403);
- if(!BASE||!SERVICE)return err(req,"Tutor service configuration unavailable",503);
- if(!KEY)return err(req,"AI answers are not configured yet. Guided help remains available.",503);
+ if(!BASE||!SERVICE){console.warn("cad-help: backend URL or server key unavailable");return err(req,"Tutor service configuration unavailable",503,"backend_not_configured")}
+ if(!KEY){console.warn("cad-help: OPENAI_API_KEY is missing in Edge Function Secrets");return err(req,"Live AI is not configured yet. The course guide still works.",503,"ai_key_missing")}
  let body;
  try{body=await readJson(req)}catch(e){return err(req,e.message||"Invalid request",400)}
  const question=limit(body?.message,800);
@@ -80,11 +80,11 @@ Deno.serve(async(req)=>{
  const route=limit(context.route,100),title=limit(context.lessonTitle,120),excerpt=limit(context.lessonText,650);
  const history=Array.isArray(body.history)?body.history.slice(-4).filter(item=>item&&["user","assistant"].includes(item.role)&&typeof item.content==="string").map(item=>({role:item.role,content:limit(item.content,500)})):[];
  let userId;
- try{userId=await checkUser(req)}catch(_){return err(req,"Account verification unavailable",503)}
+ try{userId=await checkUser(req)}catch(_){console.warn("cad-help: auth verification unavailable");return err(req,"Account verification unavailable",503,"auth_unavailable")}
  if(!userId)return err(req,"Sign in with a verified account to use live AI answers.",401);
  let allowed=false;
- try{allowed=await claimQuota(userId)}catch(_){return err(req,"Tutor quota check unavailable",503)}
- if(!allowed)return err(req,"AI question limit reached: up to four per minute and twenty per day. The free course guide still works.",429);
+ try{allowed=await claimQuota(userId)}catch(_){console.warn("cad-help: quota verification unavailable");return err(req,"Tutor quota check unavailable",503,"quota_unavailable")}
+ if(!allowed)return err(req,"AI question limit reached: up to four per minute and twenty per day. The free course guide still works.",429,"quota_exceeded");
  const content=[
   {role:"developer",content:INSTRUCTIONS},
   ...history,
@@ -99,8 +99,9 @@ Deno.serve(async(req)=>{
    signal:AbortSignal.timeout(18000)
   });
   if(!response.ok){
-   console.error("cad-help model unavailable",response.status);
-   return err(req,"Live AI is temporarily unavailable. Try the guided course links.",502)
+   console.error("cad-help: model provider returned",response.status);
+   const reason=response.status===401?"provider_credential_rejected":response.status===429?"provider_quota_exceeded":"provider_request_failed";
+   return err(req,"Live AI is temporarily unavailable. Try the guided course links.",502,reason)
   }
   const result=await response.json();
   reply=(result.output||[]).filter(x=>x.type==="message").flatMap(x=>x.content||[]).filter(x=>x.type==="output_text").map(x=>x.text).join("\n").trim()||limit(result.output_text,2000);
