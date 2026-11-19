@@ -20,7 +20,7 @@ async function request(path,method,body,authed,options){
   if(body!==undefined&&!(body instanceof Blob)&&!(body instanceof File))headers["Content-Type"]="application/json";
   if(authed){let token=await accessToken();headers["Authorization"]="Bearer "+token}
   if(options?.headers)Object.assign(headers,options.headers);
-  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),20000);
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),Math.min(45000,Math.max(1000,Number(options?.timeoutMs)||20000)));
   try{
     const res=await fetch(url+path,{method:method||"GET",headers:headers,body:body===undefined?undefined:body instanceof Blob||body instanceof File?body:JSON.stringify(body),signal:controller.signal});
     const str=await res.text(),parsed=str?(str.startsWith("{")||str.startsWith("[")?JSON.parse(str):str):null;
@@ -143,7 +143,7 @@ async function assess(action,payload){
  const data=await request("/functions/v1/cad-assess","POST",Object.assign({action},payload||{}),true);
  return data;
 }
-async function askTutor(message,context,history){return request("/functions/v1/cad-help","POST",{message,context,history},true)}
+async function askTutor(message,context,history){return request("/functions/v1/cad-help","POST",{message,context,history},true,{timeoutMs:40000})}
 async function officialStatus(){return assess("status")}
 async function getOfficialQuestions(lessonId){return assess("quiz_questions",{lessonId})}
 async function gradeOfficialQuiz(lessonId,responses){return assess("quiz_submit",{lessonId,responses})}
