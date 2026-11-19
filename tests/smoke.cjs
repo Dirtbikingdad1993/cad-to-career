@@ -55,5 +55,26 @@ const build=fs.readFileSync("scripts/build-public.mjs","utf8");
 const offline=fs.readFileSync("sw.js","utf8");
 assert.ok(build.includes("'practice-projects.js'"),"Deploy extra project data");
 assert.ok(offline.includes("'/practice-projects.js'"),"Cache extra project data for offline use");
+// The assistant works for guests and offline visitors without exposing model keys.
+const assistant=fs.readFileSync("assistant.js","utf8");
+new Function(assistant);
+assert.ok(html.includes('src="/assistant.js"'),"Assistant loaded on every app page");
+assert.ok(html.indexOf('src="/app.js"')<html.indexOf('src="/assistant.js"'),"Tutor loads after app navigation");
+assert.ok(assistant.includes("guidedReply(question)"),"Local guide provides fallback answers");
+assert.ok(assistant.includes('role="dialog"'),"Help panel is labeled for accessibility");
+assert.ok(assistant.includes("CAD_ASSISTANT={open:"),"Navigation helper can be opened programmatically");
+assert.ok(assistant.includes('window.CAD_CLOUD.askTutor'),"Model requests use the signed-in Supabase client");
+assert.ok(cloud.includes('"/functions/v1/cad-help"'),"Cloud client knows tutor route");
+assert.ok(!assistant.includes("sk-proj-")&&!assistant.includes("OPENAI_API_KEY"),"No private model credentials in browser");
+const edge=fs.readFileSync("supabase/functions/cad-help/index.ts","utf8");
+new Function(edge);
+assert.ok(edge.includes('Deno.env.get("OPENAI_API_KEY")'),"AI credential only read on backend");
+assert.ok(edge.includes("claim_cad_help_quota"),"Tutor applies durable server usage quotas");
+assert.ok(edge.includes("email_confirmed_at"),"Tutor requires a verified account");
+assert.ok(edge.includes("max_output_tokens:450"),"Tutor caps model output");
+assert.ok(fs.readFileSync("styles.css","utf8").includes(".cad-help-panel"),"Tutor layout styled");
+assert.ok(build.includes("'assistant.js'"),"Tutor included in production build");
+assert.ok(offline.includes("'/assistant.js'"),"Tutor available offline");
+assert.ok(fs.readFileSync("privacy.html","utf8").includes("Optional AI learning assistant"),"AI privacy disclosure present");
 console.log("PASS: curriculum, project briefs, entrypoint, JavaScript syntax, integrity checks");
 
