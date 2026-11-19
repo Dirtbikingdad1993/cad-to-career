@@ -33,5 +33,27 @@ assert.match(cloud,/const redirect=encodeURIComponent\("https:\/\/cad-to-career\
 assert.ok(cloud.includes('"/auth/v1/recover?redirect_to="+encodeURIComponent("https://cad-to-career.vercel.app/")'),"Password recovery must use the production return URL");
 assert.ok(!cloud.includes('encodeURIComponent(location.origin+"/")'),"Auth links must not use unpredictable preview origins");
 assert.ok(app.includes("Email delivery is temporarily limited."),"Show a usable message when public email is rate limited");
+// Additional projects are practice only: never increase the five assessed projects.
+const practiceSandbox={window:{}};
+vm.runInNewContext(fs.readFileSync("practice-projects.js","utf8"),practiceSandbox,{timeout:2000});
+const additional=practiceSandbox.window.CAD_PRACTICE_PROJECTS;
+assert.equal(additional.length,12,"12 extra practice projects must be included");
+assert.equal(new Set(additional.map(p=>p.slug)).size,12,"extra project routes must be unique");
+for(const p of additional){
+ assert.match(p.slug,/^[a-z0-9-]+$/,"URL-safe project slug");
+ assert.ok(p.title.length>10 && p.brief.length>100,"Each project needs a substantial brief: "+p.slug);
+ for(const key of ["steps","specs","deliverables","checks"]){
+  assert.ok(Array.isArray(p[key]) && p[key].length>=4 && p[key].every(v=>v.length>20),"Incomplete "+key+" for "+p.slug);
+ }
+}
+assert.ok(html.includes('src="/practice-projects.js"'),"App loads extra project data before app.js");
+assert.ok(app.includes("function practiceProject(slug)"),"Practice project detail screen present");
+assert.ok(app.includes("practiceProjects:d.practiceProjects"),"Practice progress survives backup restore");
+assert.ok(app.includes("v.practiceProjects[p.slug]"),"Practice progress is included in cloud-safe workspace");
+assert.ok(app.includes("Self-check complete"),"Practice milestones must be labeled as self-review");
+const build=fs.readFileSync("scripts/build-public.mjs","utf8");
+const offline=fs.readFileSync("sw.js","utf8");
+assert.ok(build.includes("'practice-projects.js'"),"Deploy extra project data");
+assert.ok(offline.includes("'/practice-projects.js'"),"Cache extra project data for offline use");
 console.log("PASS: curriculum, project briefs, entrypoint, JavaScript syntax, integrity checks");
 
