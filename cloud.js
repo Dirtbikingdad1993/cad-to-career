@@ -24,7 +24,7 @@ async function request(path,method,body,authed,options){
   try{
     const res=await fetch(url+path,{method:method||"GET",headers:headers,body:body===undefined?undefined:body instanceof Blob||body instanceof File?body:JSON.stringify(body),signal:controller.signal});
     const str=await res.text(),parsed=str?(str.startsWith("{")||str.startsWith("[")?JSON.parse(str):str):null;
-    if(!res.ok){const error=new Error(errMessage(parsed,res.status));error.status=res.status;throw error}
+    if(!res.ok){const error=new Error(errMessage(parsed,res.status));error.status=res.status;error.code=typeof parsed?.code==="string"?parsed.code:"";throw error}
     return parsed;
   }finally{clearTimeout(timeout)}
 }
