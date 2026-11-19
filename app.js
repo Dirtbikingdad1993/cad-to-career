@@ -277,7 +277,7 @@ function cleanWorkspace(raw){
  if(typeof raw._updatedAt==="string"&&Number.isFinite(Date.parse(raw._updatedAt)))v._updatedAt=raw._updatedAt;
  return v;
 }
-function meaningfulWorkspace(value){return Boolean(value.completed.length||Object.keys(value.quizzes).length||Object.keys(value.drafts).length||value.lab.length||value.displayName)}
+function meaningfulWorkspace(value){return Boolean(value.completed.length||Object.keys(value.quizzes).length||Object.keys(value.drafts).length||value.lab.length||value.displayName||Object.values(value.practiceProjects||{}).some(function(p){return p.notes||(p.checked&&p.checked.length)}))}
 function setCloudStatus(value){cloudStatus=value;var badge=document.getElementById("cloudBadge"),el=document.getElementById("accountCloudStatus");if(badge)badge.textContent=value;if(el)el.textContent=value}
 function refreshOfficialStatus(){
  if(!cloudUser()){verifiedStatus=null;reviewerRole=null;return Promise.resolve(null)}
