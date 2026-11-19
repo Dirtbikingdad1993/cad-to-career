@@ -483,7 +483,11 @@ document.addEventListener("submit",async function(e){
      location.hash="#/login";
    }
  }catch(error){
-   if(out)out.innerHTML='<div class="notice warning">'+escapeHtml(error.message||"Authentication failed. Please try again.")+'</div>';
+   const emailLimited=error.status===429&&(id==="registerForm"||id==="forgotForm");
+   const message=emailLimited
+     ?"Email delivery is temporarily limited. Please wait before requesting another signup or reset email. If you already have a verified account, sign in instead."
+     :(error.message||"Authentication failed. Please try again.");
+   if(out)out.innerHTML='<div class="notice warning">'+escapeHtml(message)+(emailLimited?'<p><a href="#/login">Sign in to an existing account</a></p>':'')+'</div>';
  }finally{if(button)button.disabled=false}
 });
 document.addEventListener("click",async function(e){
