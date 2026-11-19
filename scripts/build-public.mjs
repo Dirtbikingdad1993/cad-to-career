@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 // Only these files belong in the public static site. Repository, operational,
 // test, and backend files stay outside the deployment output directory.
 const files = [
-  'index.html', 'app.js', 'data.js', 'expanded-curriculum.js', 'lesson-guides.js', 'cloud-config.js', 'cloud.js',
+  'index.html', 'app.js', 'data.js', 'practice-projects.js', 'expanded-curriculum.js', 'lesson-guides.js', 'cloud-config.js', 'cloud.js',
   'styles.css', 'icon.svg', 'manifest.webmanifest', 'sw.js', 'robots.txt',
   'courses.html', 'cad-units.html', 'cad-dimensioning.html', 'cad-parametric-sketches.html', 'sitemap.xml',
   'privacy.html', 'terms.html', 'verify.html', 'verify.js', 'verify.css',
