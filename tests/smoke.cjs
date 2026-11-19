@@ -26,5 +26,12 @@ const app=fs.readFileSync("app.js","utf8");
 assert.ok(app.includes("gradeProject1(")&&app.includes("source:\"local-draft-only\""));
 assert.ok(app.includes("CERTIFICATE NOT YET ISSUED"),"Certificate screen must describe its unissued state");
 assert.ok(app.includes("lab:[]"),"No pre-earned geometry");
+// Keep public authentication links pinned to the production site, not localhost or preview origins.
+const cloud=fs.readFileSync("cloud.js","utf8");
+new Function(cloud);
+assert.match(cloud,/const redirect=encodeURIComponent\("https:\/\/cad-to-career\.vercel\.app\/"\)/,"Signup must use the production return URL");
+assert.ok(cloud.includes('"/auth/v1/recover?redirect_to="+encodeURIComponent("https://cad-to-career.vercel.app/")'),"Password recovery must use the production return URL");
+assert.ok(!cloud.includes('encodeURIComponent(location.origin+"/")'),"Auth links must not use unpredictable preview origins");
+assert.ok(app.includes("Email delivery is temporarily limited."),"Show a usable message when public email is rate limited");
 console.log("PASS: curriculum, project briefs, entrypoint, JavaScript syntax, integrity checks");
 
