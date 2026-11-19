@@ -76,5 +76,16 @@ assert.ok(fs.readFileSync("styles.css","utf8").includes(".cad-help-panel"),"Tuto
 assert.ok(build.includes("'assistant.js'"),"Tutor included in production build");
 assert.ok(offline.includes("'/assistant.js'"),"Tutor available offline");
 assert.ok(fs.readFileSync("privacy.html","utf8").includes("Optional AI learning assistant"),"AI privacy disclosure present");
+// Do not allow a fallback lesson answer to be mistaken for a provider answer.
+assert.ok(assistant.includes('Live AI tutor'),"Model replies are labeled as live AI");
+assert.ok(assistant.includes('Course guide · local'),"Fallback replies are clearly labeled local");
+assert.ok(assistant.includes('response?.source==="model"'),"Only the model source can earn the live AI label");
+assert.ok(assistant.includes('function navigationIntent('),"App navigation remains free and local");
+assert.ok(assistant.includes('aiRetryAfter'),"Recoverable tutor failures use timed retries");
+assert.ok(assistant.includes('ai_key_missing'),"Missing model key has a useful user-facing status");
+assert.ok(cloud.includes('error.code=typeof parsed?.code'),"Safe error identifiers propagate to the UI");
+assert.ok(edge.includes('ai_key_missing'),"The backend distinguishes missing provider credentials");
+assert.ok(edge.includes('backend_not_configured'),"The backend distinguishes its own configuration failures");
+assert.ok(edge.includes('provider_credential_rejected'),"Provider failures have a distinct status code");
 console.log("PASS: curriculum, project briefs, entrypoint, JavaScript syntax, integrity checks");
 
