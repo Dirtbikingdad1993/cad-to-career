@@ -54,11 +54,12 @@ shell.innerHTML='<button id="cad-help-launcher" type="button" aria-controls="cad
 document.body.appendChild(shell);
 const launcher=shell.querySelector("#cad-help-launcher"),panel=shell.querySelector("#cad-help-panel"),close=shell.querySelector("#cad-help-close");
 const form=shell.querySelector("#cad-help-form"),input=shell.querySelector("#cad-help-input"),log=shell.querySelector("#cad-help-log"),mode=shell.querySelector("#cad-help-mode"),send=shell.querySelector("#cad-help-send");
-let busy=false,aiUnavailable=false;
+let busy=false,aiRetryAfter=0;
 const history=[];
-function message(role,body,link){
+function message(role,body,link,source){
  const row=document.createElement("div");row.className="cad-help-message "+(role==="user"?"cad-help-user":"cad-help-assistant");
- const label=document.createElement("small");label.textContent=role==="user"?"You":"CAD to Career";
+ const label=document.createElement("small");
+ label.textContent=role==="user"?"You":source==="model"?"Live AI tutor":source==="status"?"AI status":"Course guide · local";
  const text=document.createElement("p");text.textContent=clean(body);
  row.append(label,text);
  if(link&&/^#\/[a-z0-9\/-]*$/i.test(link.route||"")){
@@ -69,35 +70,63 @@ function message(role,body,link){
 }
 function setOpen(open){
  panel.hidden=!open;launcher.setAttribute("aria-expanded",String(open));
- if(open){if(!log.childElementCount)message("assistant","Ask me where to find something, how to use a feature, or for help with CAD lessons and projects.");input.focus()}
+ if(open){if(!log.childElementCount)message("assistant","I can help you find features, look up lessons and projects, or ask live AI for explanations when you're signed in. Guide answers are labeled separately from AI answers.",null,"guide");input.focus()}
  else launcher.focus();
+}
+function navigationIntent(question){
+ return /^(?:where (?:is|are|can i|do i)|(?:show|open|find|navigate|go to|take me)\b|how (?:do|can) i (?:find|open|navigate|get to|go to))/.test(clean(question).toLowerCase());
+}
+function statusFor(error){
+ if(error?.code==="ai_key_missing")return "AI provider key not configured in Supabase. Ask the site owner to check Edge Function Secrets.";
+ if(error?.code==="backend_not_configured")return "Tutor backend configuration is incomplete.";
+ if(error?.code==="auth_unavailable"||error?.status===401)return "Your AI session could not be verified. Sign out and sign in again.";
+ if(error?.code==="quota_unavailable")return "The tutor quota service is unavailable.";
+ if(error?.status===429)return "Your AI question allowance was reached. You can still use the course guide.";
+ if(error?.status===502)return "The model provider could not return a response.";
+ if(error?.status===503)return "The live tutor is temporarily unavailable or not configured.";
+ return "Live AI could not be reached. Check your connection or try again.";
 }
 async function ask(question){
  if(busy)return;const q=clean(question);if(!q)return;
- input.value="";message("user",q);send.disabled=true;busy=true;mode.textContent="Finding an answer…";
- const fallback=guidedReply(q);let usedAI=false,aiText="";
- try{
-  if(navigator.onLine!==false&&!aiUnavailable&&window.CAD_CLOUD?.currentUser?.()&&typeof window.CAD_CLOUD.askTutor==="function"){
+ input.value="";message("user",q);send.disabled=true;busy=true;
+ const fallback=guidedReply(q),loggedIn=Boolean(window.CAD_CLOUD?.currentUser?.());
+ const offline=navigator.onLine===false,navOnly=navigationIntent(q);
+ let usedAI=false,modelText="",error=null;
+ if(!navOnly && !offline && loggedIn && Date.now()>=aiRetryAfter && typeof window.CAD_CLOUD?.askTutor==="function"){
+  mode.textContent="Asking live AI…";
+  try{
    const lesson=app.lessons.find(l=>location.hash==="#/learn/"+l.slug);
    const context={route:location.hash.slice(0,100),lessonTitle:lesson?.title||"",lessonText:lesson?.body?.slice(0,650)||""};
    const response=await window.CAD_CLOUD.askTutor(q,context,history.slice(-4));
-   if(response&&typeof response.answer==="string"&&response.answer.trim()){
-    aiText=response.answer;message("assistant",aiText,{route:fallback.route,label:fallback.label});
-    usedAI=true;mode.textContent="AI tutor available";
+   if(response?.source==="model"&&typeof response.answer==="string"&&response.answer.trim()){
+    modelText=response.answer;message("assistant",modelText,{route:fallback.route,label:fallback.label},"model");
+    usedAI=true;mode.textContent="Live AI tutor · response verified";
+   }else{
+    error={code:"unverified_source"};
    }
+  }catch(e){
+   error=e;
   }
- }catch(e){
-  if([404,503].includes(e?.status)){aiUnavailable=true;mode.textContent="Guide mode · AI setup pending"}
-  else if(e?.status===429)mode.textContent="Guide mode · AI request limit reached";
-  else mode.textContent="Guide mode · online AI unavailable";
+  if(error){
+   if([404,503].includes(error.status))aiRetryAfter=Date.now()+60000;
+   else if(error.status===429)aiRetryAfter=Date.now()+60000;
+   mode.textContent="Course guide · live AI unavailable";
+   message("assistant",statusFor(error),null,"status");
+  }
  }
  if(!usedAI){
-  message("assistant",fallback.text,{route:fallback.route,label:fallback.label});
-  if(!window.CAD_CLOUD?.currentUser?.()&&!aiUnavailable)mode.textContent="Guide mode · sign in for AI";
-  else if(mode.textContent==="Finding an answer…")mode.textContent="Guide mode · navigation and lessons";
+  message("assistant",fallback.text,{route:fallback.route,label:fallback.label},"guide");
+  if(navOnly)mode.textContent="Course guide · navigation";
+  else if(offline)mode.textContent="Course guide · offline";
+  else if(!loggedIn)mode.textContent="Course guide · sign in for AI";
+  else if(error)mode.textContent="Course guide · live AI unavailable";
+  else if(Date.now()<aiRetryAfter)mode.textContent="Course guide · retry AI shortly";
+  else mode.textContent="Course guide · AI not used";
  }
- history.push({role:"user",content:q},{role:"assistant",content:usedAI?aiText.slice(0,500):fallback.text.slice(0,300)});
- if(history.length>8)history.splice(0,history.length-8);
+ if(usedAI){
+  history.push({role:"user",content:q},{role:"assistant",content:modelText.slice(0,500)});
+  if(history.length>8)history.splice(0,history.length-8);
+ }
  send.disabled=false;busy=false;input.focus();
 }
 launcher.addEventListener("click",()=>setOpen(panel.hidden));
