@@ -75,14 +75,14 @@ function setOpen(open){
 async function ask(question){
  if(busy)return;const q=clean(question);if(!q)return;
  input.value="";message("user",q);send.disabled=true;busy=true;mode.textContent="Finding an answer…";
- const fallback=guidedReply(q);let usedAI=false;
+ const fallback=guidedReply(q);let usedAI=false,aiText="";
  try{
   if(navigator.onLine!==false&&!aiUnavailable&&window.CAD_CLOUD?.currentUser?.()&&typeof window.CAD_CLOUD.askTutor==="function"){
    const lesson=app.lessons.find(l=>location.hash==="#/learn/"+l.slug);
    const context={route:location.hash.slice(0,100),lessonTitle:lesson?.title||"",lessonText:lesson?.body?.slice(0,650)||""};
    const response=await window.CAD_CLOUD.askTutor(q,context,history.slice(-4));
    if(response&&typeof response.answer==="string"&&response.answer.trim()){
-    message("assistant",response.answer,{route:fallback.route,label:fallback.label});
+    aiText=response.answer;message("assistant",aiText,{route:fallback.route,label:fallback.label});
     usedAI=true;mode.textContent="AI tutor available";
    }
   }
@@ -96,7 +96,7 @@ async function ask(question){
   if(!window.CAD_CLOUD?.currentUser?.()&&!aiUnavailable)mode.textContent="Guide mode · sign in for AI";
   else if(mode.textContent==="Finding an answer…")mode.textContent="Guide mode · navigation and lessons";
  }
- history.push({role:"user",content:q},{role:"assistant",content:usedAI?"A tutor response was provided.":fallback.text.slice(0,300)});
+ history.push({role:"user",content:q},{role:"assistant",content:usedAI?aiText.slice(0,500):fallback.text.slice(0,300)});
  if(history.length>8)history.splice(0,history.length-8);
  send.disabled=false;busy=false;input.focus();
 }
