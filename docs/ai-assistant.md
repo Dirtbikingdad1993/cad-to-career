@@ -1,5 +1,14 @@
 # CAD to Career — in-app learning assistant
 
+## Verification update — November 19, 2026
+
+- **Guest/local guide:** Passed. The user received a CAD answer from the app, and a controlled test confirmed deterministic page navigation without any model request.
+- **Independent live-AI check:** Not yet passed. Supabase function logs recorded `POST /functions/v1/cad-help → HTTP 503`, with zero rows in the per-user AI quota table. This request did **not** establish a successful OpenAI response.
+- **Corrective implementation:** Each message now identifies its source as `Live AI tutor`, `Course guide · local`, or `AI status`. Navigation-only questions use the local guide without spending model requests. Recoverable configuration and provider failures display specific error messages and are retried after a short backoff.
+- **Backend diagnostics:** `cad-help` Edge Function version 2 is ACTIVE with JWT verification on; safe error codes distinguish missing server API configuration, auth/quota failures and upstream credential/usage failures. The key value is never logged or returned.
+- **Verification next:** Refresh the deployed site, sign into a verified account, ask an open-ended CAD explanation, and confirm the reply label is `Live AI tutor`. A successful call should increment the account's per-day quota. If an `AI status` message appears, inspect its description and the Edge Functions → Secrets settings, without exposing any credential.
+
+
 ## Implemented
 - Responsive Help button on every route for desktop and mobile Android PWA.
 - Guest and offline users: no-cost deterministic navigation help and keyword lookup across 53 lessons, 5 assessed projects and 12 extra self-reviewed projects.
