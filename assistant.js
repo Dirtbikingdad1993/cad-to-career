@@ -81,6 +81,9 @@ function statusFor(error){
  if(error?.code==="backend_not_configured")return "Tutor backend configuration is incomplete.";
  if(error?.code==="auth_unavailable"||error?.status===401)return "Your AI session could not be verified. Sign out and sign in again.";
  if(error?.code==="quota_unavailable")return "The tutor quota service is unavailable.";
+ if(error?.code==="provider_credential_rejected")return "The AI provider rejected its API credential. The site owner needs to check the OpenAI key in Supabase.";
+ if(error?.code==="provider_quota_exceeded")return "The AI provider's usage or billing limit was reached. Course guidance remains available.";
+ if(error?.code==="provider_request_failed")return "The AI provider returned a service error.";
  if(error?.status===429)return "Your AI question allowance was reached. You can still use the course guide.";
  if(error?.status===502)return "The model provider could not return a response.";
  if(error?.status===503)return "The live tutor is temporarily unavailable or not configured.";
