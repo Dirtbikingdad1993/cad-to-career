@@ -83,7 +83,7 @@ async function signIn(email,password){
   recovery=false;emit();return user;
 }
 async function signUp(email,password){
-  const redirect=encodeURIComponent(location.origin+"/");
+  const redirect=encodeURIComponent("https://cad-to-career.vercel.app/");
   const result=await request("/auth/v1/signup?redirect_to="+redirect,"POST",{email,password},false);
   if(result?.access_token&&result?.refresh_token){acceptToken(result);emit();return {needsVerification:false}}
   return {needsVerification:true};
@@ -93,7 +93,7 @@ async function signOut(){
   user=null;recovery=false;storeSession(null);emit();
 }
 async function sendRecovery(email){
-  return request("/auth/v1/recover?redirect_to="+encodeURIComponent(location.origin+"/"),"POST",{email},false);
+  return request("/auth/v1/recover?redirect_to="+encodeURIComponent("https://cad-to-career.vercel.app/"),"POST",{email},false);
 }
 async function changePassword(password){
   if(password.length<10)throw Error("Choose a password with at least 10 characters.");
