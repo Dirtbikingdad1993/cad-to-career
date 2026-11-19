@@ -9,7 +9,7 @@ const files = [
   'courses.html', 'cad-units.html', 'cad-dimensioning.html', 'cad-parametric-sketches.html', 'sitemap.xml',
   'privacy.html', 'terms.html', 'verify.html', 'verify.js', 'verify.css',
   'resources/phone-to-desktop-roadmap.md',
-  'resources/technical-references.html',
+  'resources/mounting-plate.svg', 'resources/technical-references.html',
   ...[1, 2, 3, 4, 5].map(n => `resources/project-${n}-brief.md`),
   'pilot/index.html', 'pilot/app.js', 'pilot/metrics.js', 'pilot/styles.css',
 ];

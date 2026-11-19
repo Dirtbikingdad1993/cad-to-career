@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 274" fill="none">
+<title>Mounting plate, top view</title>
+<desc>A 120 by 70 millimeter rectangular plate with four diameter 8 holes. Each center is 15 millimeters from its two nearest edges.</desc>
+<defs><pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse"><path d="M25 0H0V25" stroke="#acbcb2" stroke-width=".6"/></pattern><g id="hole"><circle r="10" fill="#f7f7eb" stroke="#243e37" stroke-width="2"/><path d="M-16 0h32M0 -16v32" stroke="#48695c" stroke-width=".9"/></g></defs>
+<rect width="440" height="274" fill="#e6eadc"/><rect width="440" height="274" fill="url(#grid)"/>
+<path d="M62 60h300v175H62z" fill="#d1ded0" stroke="#243e37" stroke-width="2.7"/>
+<use href="#hole" x="99.5" y="97.5"/><use href="#hole" x="324.5" y="97.5"/><use href="#hole" x="99.5" y="197.5"/><use href="#hole" x="324.5" y="197.5"/>
+<g stroke="#3d5d4e"><path d="M62 53V29m300 24V29M62 36h300m7 24h32m-32 175h32m-10-175v175"/><path d="m59 40 6-8m294 8 6-8m22 31 8-6m-8 181 8-6"/><path d="m106 105 40 40h50"/></g>
+<g font-family="monospace" font-size="15" fill="#263f32"><text x="212" y="29" text-anchor="middle">120</text><text x="409" y="150" text-anchor="middle">70</text><text x="150" y="139">4× Ø8</text></g>
+</svg>

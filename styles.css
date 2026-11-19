@@ -77,3 +77,41 @@ progress.progress-track::-moz-progress-bar{background:linear-gradient(90deg,#32b
 .lesson-confirm{border:1px solid #36555a;border-radius:16px;padding:25px 28px;background:linear-gradient(130deg,#122f35,#102232);margin-top:20px}.lesson-confirm h2{font-size:23px}.lesson-confirm>div:first-child>p{max-width:72ch;color:#bdd0d6;font-size:13px;line-height:1.7;margin:8px 0 18px}.lesson-confirm .actions{margin-top:18px}
 .lesson-bottom-nav{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}.lesson-bottom-nav a{min-width:0;display:flex;flex-direction:column;gap:7px;padding:17px 19px;border:1px solid #2c4354;border-radius:12px;background:#0e1d2d}.lesson-bottom-nav a:hover{border-color:#539c92;text-decoration:none}.lesson-bottom-nav span{color:#7ed9ce;font-size:10px;font-weight:800;letter-spacing:.09em}.lesson-bottom-nav strong{color:#d7e7ef;font-size:13px;line-height:1.4}.lesson-bottom-nav .next{text-align:right;align-items:flex-end}
 @media(max-width:720px){.lesson-back{margin-top:-8px}.lesson-hero{grid-template-columns:1fr;padding:25px 22px;gap:20px;border-radius:17px}.lesson-hero h1{font-size:34px;margin:14px 0}.lesson-intro{font-size:14px;line-height:1.7}.lesson-hero-art{min-height:140px;max-height:165px;padding:11px}.lesson-hero-art svg{height:100px}.lesson-outline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px}.outline-label{grid-column:1/-1;margin:0 0 2px}.lesson-outline button{padding:8px 3px;font-size:11px;gap:4px}.lesson-block{margin-top:33px}.lesson-section-heading{gap:12px}.lesson-section-number{width:36px;height:36px}.lesson-reading{padding:22px 20px}.lesson-reading p,.lesson-reading .lesson-lead{font-size:14px;line-height:1.8}.lesson-example{grid-template-columns:1fr;gap:10px;padding:20px}.example-mark{width:34px;height:34px;font-size:19px}.lesson-example p{font-size:14px}.lesson-steps li{padding:15px}.lesson-quiz{padding:20px 18px}.lesson-confirm{padding:21px 19px}.lesson-bottom-nav a{padding:14px 12px}.lesson-bottom-nav strong{font-size:12px}}
+
+/* Course workbook and drawing sheet */
+:root {background:#111c22;color:#f2f2e8;font-family:"DM Sans",system-ui,sans-serif}
+.sidebar,.topbar,.mobilebar {background:#15232a}
+.sidebar {overflow-y:auto}
+.nav,.btn,.card,.panel,.listitem,.option,.hero,.notice,.step,.mark {border-radius:4px}
+.btn {font-size:.9rem}
+.btn.primary {background:#ace1c1;border-color:#ace1c1;color:#152923}
+.nav.active {color:#b6e5c9;background:#253d37;border-color:#446458}
+.accent,.eyebrow {color:#a9daba}
+.hero {background:#203139}
+.hero:after {display:none}
+.panel,.card,.listitem {background:#19282f;border-color:#394a50}
+.card p,.panel p {font-size:1rem}
+.workbook h1,.workbook h2,body>main.content h1 {font-family:Georgia,"Times New Roman",serif;font-weight:400}
+.workbook-lead {display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,64px);align-items:center;padding:10px 0 42px;border-bottom:2px solid #a5b7ab}
+.workbook h1 {font-size:clamp(2.65rem,4.9vw,5rem);line-height:1.01;letter-spacing:-.045em;margin:.28em 0}
+.workbook p,body>main.content {line-height:1.65}
+.workbook p {color:#bccacb}
+.workbook .workbook-meta,.bench-row small,.workbook figcaption span {font-family:ui-monospace,monospace;font-size:.82rem}
+.workbook .workbook-meta {color:#b6dec4;margin:0}
+.workbook .actions {align-items:center;gap:20px}
+.text-link,.tool-index a,body>main.content a:not(.btn) {text-decoration:underline;text-underline-offset:4px}
+.workbook figure {margin:0;background:#e6eadc;color:#203c32;border:7px solid #e6eadc}
+.workbook figure img {display:block;width:100%;height:auto}
+.workbook figcaption {display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;border-top:1px solid #889c8e;padding:10px 6px 3px}
+.bench-section {margin-top:36px}
+.workbook h2,body>main.content h1 {font-size:clamp(2rem,3vw,3rem);letter-spacing:-.035em;line-height:1.1;margin:0 0 10px}
+.bench-count {margin:0 0 18px}
+.bench-row {display:grid;grid-template-columns:8rem 1fr auto;gap:18px;align-items:baseline;padding:20px 0;border-top:1px solid #435358}
+.bench-row small,.bench-row span,.tool-index span {color:#b0c3c4}
+.bench-row span {font-size:.9rem}
+.tool-index {list-style:none;margin:0;padding:0}
+.tool-index li {display:grid;grid-template-columns:minmax(8rem,1fr) 3fr;gap:15px;border-top:1px solid #435358;padding:14px 0}
+body>main.content {max-width:54rem}
+body>main.content h1 {margin-top:1em}
+@media(max-width:950px){.workbook-lead{grid-template-columns:1fr}.workbook figure{max-width:32rem}.bench-row{grid-template-columns:7rem 1fr}.bench-row span{grid-column:2}}
+@media(max-width:540px){.workbook-lead{gap:24px;padding-bottom:24px}.bench-section{margin-top:25px}.bench-row,.tool-index li{grid-template-columns:1fr;gap:5px}.bench-row span{grid-column:auto}.workbook figcaption{font-size:.9rem}}

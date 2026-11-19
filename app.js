@@ -24,7 +24,30 @@ function completedCount(){return content.lessons.filter(function(l){return lesso
 function passedCount(){return content.projects.filter(function(p){return p.id===1&&state.project1&&state.project1.pass}).length}
 function stat(n,name){return '<div class="card"><div class="kpi">'+n+'</div><div class="kpi-label">'+name+'</div></div>'}
 function titleBlock(eyebrow,title,sub){return '<div class="sectionhead"><div><div class="eyebrow">'+eyebrow+'</div><h2>'+title+'</h2>'+(sub?'<span class="muted smalltext">'+sub+'</span>':"")+'</div></div>'}
-function overview(){var done=completedCount();var next=content.lessons.find(function(l){return !lessonDone(l.id)})||content.lessons[content.lessons.length-1];layout('<section class="hero"><div class="eyebrow">FROM FIRST SKETCH TO REAL-WORLD SKILLS</div><h1>Learn to design.<br><span class="accent">Prove what you can build.</span></h1><p>Free, project-driven CAD education that starts on your Android phone and leads toward professional 2D drafting and 3D product design on desktop. No paid CAD license required.</p><div class="actions"><a class="btn primary" href="#/learn/'+next.slug+'">'+icon("arrow")+' '+(done?"Continue learning":"Start learning free")+'</a><a class="btn" href="/courses">Explore the course</a><a class="btn" href="#/lab/2d">Open 2D CAD lab</a><a class="btn ghost" href="/resources/phone-to-desktop-roadmap.md" target="_blank" rel="noopener noreferrer">Phone → Desktop guide ↗</a></div></section><div class="grid">'+stat(done+' / '+content.lessons.length,"Lessons confirmed")+stat(pct(done,content.lessons.length)+"%","Learning roadmap")+stat(passedCount()+" / 5","Projects validated locally")+'</div>'+titleBlock("YOUR ROADMAP","Build skills that transfer","Move from phone-first learning to desktop engineering tools")+'<div class="grid"><a href="#/courses" class="card card-link"><div class="icon-square">01</div><h3>Learn the principles</h3><p>Units, dimensions, tolerances, constraints, file formats and design intent. Practice on Android.</p><span class="badge">Lessons 1–8</span></a><a href="#/lab/2d" class="card card-link"><div class="icon-square">02</div><h3>Draft with precision</h3><p>Draw real shapes in millimeters, edit geometry, export source and check dimensions automatically.</p><span class="badge">Live CAD editor</span></a><a href="#/projects" class="card card-link"><div class="icon-square">03</div><h3>Prove your work</h3><p>Produce actual FreeCAD, Fusion and Blender files for five portfolio-ready projects.</p><span class="badge">Evidence-based assessment</span></a></div>'+titleBlock("CONTINUE LEARNING","Your next lesson","Nothing is marked complete without your confirmation")+'<div class="listitem"><div class="step">'+next.id+'</div><div class="listcontent"><strong>'+escapeHtml(next.title)+'</strong><p>'+escapeHtml(next.unit)+'</p></div><a href="#/learn/'+next.slug+'" class="btn small primary">Open lesson</a></div>'+titleBlock("SOFTWARE","Tools you will learn","Desktop software is recommended for real drafting and modeling")+'<div class="grid two">'+content.software.map(function(s){return '<div class="card"><span class="badge">'+escapeHtml(s.platform)+'</span><h3>'+escapeHtml(s.name)+'</h3><p>'+escapeHtml(s.role)+' · '+escapeHtml(s.cost)+'</p><a target="_blank" rel="noopener noreferrer" href="'+s.url+'" class="btn small">Official website ↗</a></div>'}).join("")+'</div>',"Overview")}
+function overview(){
+  const done = completedCount();
+  const next = content.lessons.find(lesson => !lessonDone(lesson.id));
+  const lessonLink = next ? '#/learn/' + next.slug : '#/projects';
+  const lessonAction = next ? (done ? 'Resume lesson' : 'Start the first lesson') : 'Open your projects';
+  const software = content.software.map(tool => `<li><a href="${escapeHtml(tool.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(tool.name)}</a><span>${escapeHtml(tool.role)} · ${escapeHtml(tool.cost)}</span></li>`).join('');
+  layout(`<div class="workbook">
+    <section class="workbook-lead">
+      <div><p class="workbook-meta">Free course · CAD foundations</p>
+        <h1>Draw your first mounting plate.</h1>
+        <p>How would you tell someone exactly where to drill four holes? Start with units and coordinates on your phone, then lay out the plate in the 2D lab.</p>
+        <div class="actions"><a class="btn primary" href="${lessonLink}">${lessonAction}</a><a class="text-link" href="/courses">Course outline</a></div>
+      </div>
+      <figure><img src="/resources/mounting-plate.svg" width="440" height="274" alt="Top view of a 120 by 70 mm plate with four 8 mm holes."/>
+        <figcaption><strong>Precision mounting plate</strong><span>Top view · mm</span></figcaption>
+      </figure>
+    </section>
+    <section class="bench-section"><h2>Your workbook</h2><p class="bench-count">${done} of ${content.lessons.length} lessons confirmed · ${passedCount()} of 5 projects validated locally</p>
+      <a class="bench-row" href="${lessonLink}"><small>${next ? 'Current lesson' : 'Project work'}</small><strong>${next ? escapeHtml(next.title) : 'Review your projects'}</strong><span>${next ? escapeHtml(next.unit) : 'Portfolio'}</span></a>
+      <a class="bench-row" href="#/lab/2d"><small>Drafting lab</small><strong>Lay out the hole pattern</strong><span>Browser CAD</span></a>
+      <a class="bench-row" href="#/projects"><small>Project briefs</small><strong>Check and document your work</strong><span>5 assignments</span></a>
+    </section>
+    <section class="bench-section"><h2>Moving to desktop CAD</h2><p>Choose a tool for the kind of drawing or model you want to make. <a class="text-link" href="/resources/phone-to-desktop-roadmap.md">Read the setup guide</a>.</p><ul class="tool-index">${software}</ul></section></div>`, 'Overview');
+}
 function courses(){
  var groups={},total=content.lessons.length,core=content.lessons.filter(function(l){return !l.practiceOnly}).length;
  content.lessons.forEach(function(l){(groups[l.unit]||(groups[l.unit]=[])).push(l)});
