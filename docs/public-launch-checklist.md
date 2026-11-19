@@ -1,4 +1,28 @@
-# Finish public registration and reviewer setup
+# CAD to Career — public launch checklist
+
+## Live audit — November 18, 2026
+
+**Status:** Public course and PWA are deployed, but do not advertise unrestricted enrollment or verified certificates yet.
+
+**Confirmed:**
+- Vercel production and public URLs: deployment READY. Public lessons and course routes exist in the repository; external crawler/indexing verification remains pending.
+- Signup and recovery redirects: source now pins `https://cad-to-career.vercel.app/`; production commit `cb23f3d` deployed.
+- Real-user tests: account creation/confirmation and password sign-in worked for test accounts; lesson progress restored after reopening, appeared on a second device, and manual plus automatic offline-to-cloud synchronization passed.
+- Supabase public workspace RLS enabled; a saved completed-lesson record was observed. Independent student A/B isolation and comprehensive reviewer/file security still require production QA.
+- Recent frontend: rate-limited email requests now display an actionable message instead of raw provider wording.
+
+**Blocking public enrollment / wide launch:**
+1. **Transactional email** — Supabase built-in SMTP returned "email rate exceeded"; set up custom SMTP with a verified sending domain and test a *non-team* signup, confirmation redirect, and password reset. Keep email confirmation enabled. [SMTP settings](https://supabase.com/dashboard/project/kcerxxauczxydmexcdly/auth/smtp) and [rate limits](https://supabase.com/dashboard/project/kcerxxauczxydmexcdly/auth/rate-limits).
+2. **Policy/operator details** — designate a support/privacy contact, publish a concrete account deletion and retention process and update preview privacy/terms before broad enrollment.
+3. **Untrusted evidence uploads** — validate file signatures and scan uploaded files server-side, plus orphan cleanup and storage quota monitoring before inviting arbitrary public submissions.
+4. **Reviewer setup and assessment QA** — assign a verified owner-only reviewer role, test two-user access controls, independent reviews, certificates, revocations and read-only public credential verification.
+5. **Security and observability** — review the leaked-password protection warning in Supabase; confirm monitoring and abuse protection without weakening login or making an unapproved paid upgrade.
+6. **SEO/marketing validation** — sitemap and robots files exist; indexing and external crawlability have not been independently confirmed.
+
+**Public release scope today:** The free course can be shared as a public preview; do not promise seamless general-purpose signup or official certification until the gates above pass.
+
+---
+
 
 Supabase project: `kcerxxauczxydmexcdly` (CAD to Career).
 
@@ -10,7 +34,7 @@ Set:
 - **Additional Redirect URLs:** `https://cad-to-career.vercel.app/**`
 - For local development only: `http://localhost:8000/**`
 
-Keep Email Confirmation enabled. Do not publish test accounts or passwords. The frontend signup confirmation flow expects implicit access/refresh tokens redirected to the site origin.
+Keep Email Confirmation enabled. Do not publish test accounts or passwords. The frontend signup and recovery requests now specify the fixed production return URL. Re-test fresh emails after SMTP is enabled; old emails cannot validate a new setting.
 
 **Repeatable configuration option:** I added [a GitHub Actions workflow](https://github.com/Dirtbikingdad1993/cad-to-career/actions/workflows/supabase-auth-urls.yml) and a `scripts/auth-redirects.mjs` command. They can read or update the exact site/redirect URLs while preserving existing allowlisted destinations. They require a **project-scoped Supabase Management API token** stored as the protected repository secret `SUPABASE_MANAGEMENT_PAT` with `auth_config_read`, `auth_config_write` and `project_admin_write` permissions. Create that secret yourself, then run the workflow with mode **configure**. The tool connection here does not expose your Supabase Management API token, so this workflow has **not** been run. It does not manage SMTP credentials.
 
@@ -33,7 +57,7 @@ Verify:
 - sign-out removes account session from that device.
 
 ## 3. Reviewer activation
-**Current live state:** no student accounts are registered yet and no reviewer has been granted access. Do not insert an arbitrary or unverified email.
+**Current live state:** test/student accounts have been confirmed, but no reviewer membership was present in the most recent database audit. Do not insert an arbitrary or unverified email.
 
 1. Register your actual owner account at [CAD to Career](https://cad-to-career.vercel.app/#/register), after SMTP and URL redirects are working.
 2. Open the verification email and confirm the account.
@@ -52,13 +76,11 @@ Verify:
 - Test on Android phones, desktop browsers and offline-to-online transitions.
 - Complete legal operator contact, retention/deletion policy and storage malware screening before wide distribution.
 
-## 5. Production-readiness status (November 13, 2026)
+## 5. Release evidence and responsibilities
 
-- **Completed:** Backend migrations, least-privilege table grants, database ownership checks for two simulated users, reviewer authorization and atomic decision tests. Test data was rolled back.
-- **Completed:** Vercel Git deployment, cloud authentication UI, student drafts, private submission and reviewer UI code, server grader and read-only certificate verification endpoint.
-- **Incomplete:** Supabase project Site URL/redirect allowlist has not been read or configured through a privileged token. The current connected tools do not expose those Auth settings.
-- **Incomplete:** SMTP host, verified sender domain and email credential have not been supplied or configured, so public email verification/password resets are not live for arbitrary users.
-- **Incomplete:** Owner account has not been created and email-verified, so reviewer admin membership cannot be safely granted yet.
-- **Incomplete:** Real-device onboarding, public-domain email delivery, role-access QA from actual accounts and storage malware scanning.
+- **Production code:** Confirm Vercel READY on the exact commit and GitHub test results after each change.
+- **Connected service checks:** Supabase project health, workspace presence and advisor warnings can be read with the existing integration; the current integration cannot set Auth SMTP credentials or edit hosted Auth URL settings.
+- **Account-holder actions:** Configure provider credentials only in secure Supabase/Resend dashboards, verify DNS ownership, designate the site's legal operator/contact and approve final data-retention rules.
+- **Acceptance test:** From an unassociated email address, register, click the new verification link, reach the public site, sign in, reset password, recover work on a second device, and test unauthorized student/reviewer access. Complete this after production SMTP is working.
 
-**Do not announce unrestricted public registration or verified certificates as fully tested until these prerequisites are satisfied.**
+**Do not announce unrestricted public registration or independently verified credentials as fully tested until these prerequisites are satisfied.**
