@@ -19,7 +19,7 @@ window.CAD_FUNDING = {
   githubSponsors: "",
   // Paid service for schools, workforce programs and employers.
   teams: {
-    contactEmail: "",
+    contactEmail: "dirtbikingdad1993@gmail.com",
     bookingUrl: "",
     packages: [
       { name: "Classroom cohort", price: "From $299 / cohort", detail: "Up to 30 learners, instructor guide, weekly progress summary and a kickoff session." },
