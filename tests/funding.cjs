@@ -12,6 +12,7 @@ test('support page only links to allowlisted https payment hosts', () => {
   assert.equal(safeUrl('https://evil.example/stripe'), null);
   assert.equal(safeUrl('https://buy.stripe.com.evil.example/x'), null);
   assert.equal(safeUrl(''), null);
+  assert.ok(safeUrl('https://billing.stripe.com/p/login/abc'));
   assert.equal(safeEmail('team@example.org'), 'team@example.org');
   assert.equal(safeEmail('bad"@x.org'), null);
 });

@@ -3,7 +3,7 @@
   // Only well-known payment hosts are rendered, so a typo or tampered config
   // can never turn a "Donate" button into a link to an arbitrary site.
   var ALLOWED_HOSTS = [
-    "buy.stripe.com", "donate.stripe.com", "checkout.stripe.com",
+    "buy.stripe.com", "donate.stripe.com", "checkout.stripe.com", "billing.stripe.com",
     "github.com", "ko-fi.com", "opencollective.com",
     "www.paypal.com", "paypal.me", "www.buymeacoffee.com", "buymeacoffee.com",
     "calendly.com", "cal.com"
@@ -68,6 +68,15 @@
     }
 
     if (closedBox) closedBox.hidden = shown > 0;
+    var manage = safeUrl(config.manageUrl);
+    var manageBox = document.getElementById("manage-gift");
+    if (manage && manageBox && shown > 0) {
+      var a = el("a", { href: manage, rel: "noopener noreferrer", target: "_blank" }, "Manage or cancel your monthly gift");
+      manageBox.appendChild(a);
+      manageBox.hidden = false;
+    }
+    var thanks = document.getElementById("support-thanks");
+    if (thanks && /(?:^|[?&])thanks=1(?:&|$)/.test(window.location.search)) thanks.hidden = false;
 
     var teams = config.teams || {};
     if (teamsBox) {

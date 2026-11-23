@@ -7,12 +7,14 @@
 window.CAD_FUNDING = {
   // Monthly supporter tiers (recurring payment links).
   monthly: [
-    { id: "drafter", name: "Drafter", amount: 5, perks: "Keeps 53 lessons and the CAD lab free for one more learner each month.", url: "" },
-    { id: "designer", name: "Designer", amount: 10, perks: "Covers hosting and assessment costs for a small class, plus a vote on which lessons we build next.", url: "" },
-    { id: "engineer", name: "Engineer", amount: 25, perks: "Funds human project review for learners, plus your name on the supporters list if you want it.", url: "" }
+    { id: "drafter", name: "Drafter", amount: 5, perks: "Keeps 53 lessons and the CAD lab free for one more learner each month.", url: "https://buy.stripe.com/6oUaEZafZenx9b8ddDgbm00" },
+    { id: "designer", name: "Designer", amount: 10, perks: "Covers hosting and assessment costs for a small class, plus a vote on which lessons we build next.", url: "https://buy.stripe.com/7sYcN70Fp4MXafc6Pfgbm01" },
+    { id: "engineer", name: "Engineer", amount: 25, perks: "Funds human project review for learners, plus your name on the supporters list if you want it.", url: "https://buy.stripe.com/6oU9AVbk32EP0ECddDgbm02" }
   ],
   // One-time donation link (lets the donor choose the amount).
-  oneTime: { label: "Give once", url: "" },
+  oneTime: { label: "Give once", url: "https://donate.stripe.com/cNi28tbk3djt3QOddDgbm03" },
+  // Stripe customer portal sign-in page: donors manage or cancel monthly gifts here.
+  manageUrl: "https://billing.stripe.com/p/login/6oUaEZafZenx9b8ddDgbm00",
   // Optional extra channels.
   githubSponsors: "",
   // Paid service for schools, workforce programs and employers.
