@@ -35,6 +35,7 @@ jobs:
           node --test tests/expanded-curriculum.cjs
           node --test tests/lesson-guides.cjs
           node --test tests/geometry-feedback.cjs
+          node --test tests/funding.cjs
           node --test tests/lab-accessibility.cjs
           node tests/cloud-sync.cjs
 

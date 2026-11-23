@@ -59,7 +59,7 @@ window.CAD_PRACTICE_PROJECTS=[
       "Create an annotated export showing the different hole functions."
     ],
     "deliverables": [
-      "Editable 2D source.",
+      "Editable 2D source file (DXF or SVG).",
       "Dimensioned top view in PDF or SVG.",
       "Hole table with x, y and diameter columns.",
       "Short note on cable abrasion protection."
@@ -270,7 +270,7 @@ window.CAD_PRACTICE_PROJECTS=[
     ],
     "deliverables": [
       "Native parametric model.",
-      "STEP export.",
+      "STEP export of the finished cover.",
       "Annotated pattern dimension sheet.",
       "Short note explaining molding or 3D-printing constraints."
     ],

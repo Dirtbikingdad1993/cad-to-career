@@ -7,7 +7,7 @@ const files = [
   'index.html', 'app.js', 'assistant.js', 'data.js', 'practice-projects.js', 'expanded-curriculum.js', 'lesson-guides.js', 'cloud-config.js', 'cloud.js',
   'styles.css', 'icon.svg', 'manifest.webmanifest', 'sw.js', 'robots.txt',
   'courses.html', 'cad-units.html', 'cad-dimensioning.html', 'cad-parametric-sketches.html', 'sitemap.xml',
-  'privacy.html', 'terms.html', 'verify.html', 'verify.js', 'verify.css',
+  'privacy.html', 'terms.html', 'support.html', 'support.js', 'funding-config.js', 'verify.html', 'verify.js', 'verify.css',
   'resources/phone-to-desktop-roadmap.md',
   'resources/cad-wordmark.svg', 'resources/mounting-plate.svg', 'resources/technical-references.html',
   ...[1, 2, 3, 4, 5].map(n => `resources/project-${n}-brief.md`),
